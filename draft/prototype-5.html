@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LINZ // Keyword Discovery</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --font-main: 'Inter', 'Noto Sans JP', sans-serif;
+    --grad-1: #6366f1;
+    --grad-2: #a855f7;
+    --grad-3: #ec4899;
+    --grad-4: #f97316;
+    --bg-dark: #0f0f1a;
+    --bg-card: rgba(255, 255, 255, 0.04);
+    --bg-card-hover: rgba(255, 255, 255, 0.07);
+    --text-primary: #f1f1f6;
+    --text-secondary: rgba(255, 255, 255, 0.55);
+    --text-muted: rgba(255, 255, 255, 0.3);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-glow: rgba(139, 92, 246, 0.3);
+    --radius: 20px;
+    --radius-sm: 12px;
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 2rem 1rem;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* -- ANIMATED GRADIENT BACKGROUND -- */
+  .bg-gradient {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .bg-gradient::before {
+    content: '';
+    position: absolute;
+    width: 150%;
+    height: 150%;
+    top: -25%;
+    left: -25%;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      rgba(99, 102, 241, 0.15),
+      rgba(168, 85, 247, 0.12),
+      rgba(236, 72, 153, 0.1),
+      rgba(249, 115, 22, 0.08),
+      rgba(99, 102, 241, 0.15)
+    );
+    animation: bgRotate 20s linear infinite;
+  }
+
+  @keyframes bgRotate {
+    to { transform: rotate(360deg); }
+  }
+
+  .bg-gradient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse at 30% 20%,
+      rgba(139, 92, 246, 0.12) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 70% 80%,
+      rgba(236, 72, 153, 0.08) 0%,
+      transparent 50%
+    );
+    animation: bgPulse 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes bgPulse {
+    0% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+
+  /* Floating orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb-1 {
+    width: 400px;
+    height: 400px;
+    background: rgba(99, 102, 241, 0.15);
+    top: -10%;
+    left: -5%;
+    animation: orbFloat1 12s ease-in-out infinite alternate;
+  }
+
+  .orb-2 {
+    width: 350px;
+    height: 350px;
+    background: rgba(236, 72, 153, 0.12);
+    bottom: -10%;
+    right: -5%;
+    animation: orbFloat2 15s ease-in-out infinite alternate;
+  }
+
+  .orb-3 {
+    width: 250px;
+    height: 250px;
+    background: rgba(168, 85, 247, 0.1);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: orbFloat3 10s ease-in-out infinite alternate;
+  }
+
+  @keyframes orbFloat1 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(80px, 60px) scale(1.15); }
+  }
+
+  @keyframes orbFloat2 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-60px, -80px) scale(1.2); }
+  }
+
+  @keyframes orbFloat3 {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+    100% { transform: translate(-40%, -60%) scale(1.3); opacity: 1; }
+  }
+
+  /* -- MAIN CONTAINER -- */
+  .main-container {
+    width: 100%;
+    max-width: 640px;
+    position: relative;
+    z-index: 1;
+    animation: containerIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes containerIn {
+    0% { opacity: 0; transform: translateY(30px) scale(0.96); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* -- CARD -- */
+  .card {
+    background: var(--bg-card);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.02),
+      rgba(139, 92, 246, 0.1)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* -- HEADER -- */
+  .card-header {
+    padding: 2rem 2rem 0;
+    text-align: center;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--grad-1), var(--grad-2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 0.85rem;
+    color: #fff;
+    letter-spacing: -0.02em;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  }
+
+  .logo-text {
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .tagline {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+
+  /* -- CARD BODY -- */
+  .card-body {
+    padding: 1.5rem 2rem 2rem;
+  }
+
+  /* -- OUTPUT AREA -- */
+  .output-area {
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+
+  /* -- IDLE STATE -- */
+  .idle-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    animation: idlePulse 3s ease-in-out infinite;
+  }
+
+  @keyframes idlePulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.02); }
+  }
+
+  .idle-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15));
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  .idle-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .idle-text strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  /* -- LOADING STATE -- */
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .loading-spinner {
+    width: 48px;
+    height: 48px;
+    position: relative;
+  }
+
+  .loading-spinner::before,
+  .loading-spinner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+  }
+
+  .loading-spinner::before {
+    border-top-color: var(--grad-1);
+    border-right-color: var(--grad-2);
+    animation: spinOuter 1s linear infinite;
+  }
+
+  .loading-spinner::after {
+    inset: 6px;
+    border-bottom-color: var(--grad-3);
+    border-left-color: var(--grad-4);
+    animation: spinInner 0.8s linear infinite reverse;
+  }
+
+  @keyframes spinOuter { to { transform: rotate(360deg); } }
+  @keyframes spinInner { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+  }
+
+  .loading-bar {
+    width: 200px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .loading-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--grad-1), var(--grad-2), var(--grad-3));
+    background-size: 200% 100%;
+    animation: gradientShift 2s ease infinite;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* -- RESULT STATE -- */
+  .result-state {
+    width: 100%;
+    text-align: left;
+  }
+
+  .keyword-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .keyword-display {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, var(--grad-1), var(--grad-2), var(--grad-3));
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: keywordGradient 4s ease infinite, keywordReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes keywordGradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  @keyframes keywordReveal {
+    0% { opacity: 0; transform: translateY(12px); filter: blur(8px); }
+    100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  }
+
+  /* -- CATEGORY BADGE -- */
+  .category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15));
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    color: rgba(168, 145, 255, 0.9);
+    margin-bottom: 1rem;
+    animation: badgeReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+  }
+
+  @keyframes badgeReveal {
+    0% { opacity: 0; transform: translateY(6px) scale(0.9); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* -- SECTION BOX (shared for definition, explanation, usecases) -- */
+  .section-box {
+    padding: 1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 0.75rem;
+    animation: sectionReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes sectionReveal {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .section-label-icon {
+    font-size: 0.75rem;
+  }
+
+  .section-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-weight: 400;
+  }
+
+  /* -- DEFINITION BOX -- */
+  .definition-box {
+    border-left: 3px solid var(--grad-2);
+  }
+
+  .definition-box .section-text {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* -- EXPLANATION BOX -- */
+  .explanation-box {
+    border-left: 3px solid var(--grad-1);
+  }
+
+  /* -- DIAGRAM CONTAINER -- */
+  .diagram-container {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 0.75rem;
+    animation: sectionReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    overflow-x: auto;
+  }
+
+  .diagram-container .section-label {
+    margin-bottom: 0.75rem;
+  }
+
+  .diagram-container .mermaid {
+    display: flex;
+    justify-content: center;
+  }
+
+  .diagram-container .mermaid svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* -- USE CASES -- */
+  .usecases-box {
+    border-left: 3px solid var(--grad-3);
+  }
+
+  .usecases-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .usecases-list li {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    padding-left: 1.1rem;
+    position: relative;
+  }
+
+  .usecases-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--grad-3), var(--grad-4));
+  }
+
+  /* -- RELATED TAGS -- */
+  .related-section {
+    margin-bottom: 0.75rem;
+    animation: sectionReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .related-section .section-label {
+    margin-bottom: 0.6rem;
+  }
+
+  .related-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .related-tag {
+    display: inline-block;
+    padding: 0.3rem 0.7rem;
+    border-radius: 100px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none;
+  }
+
+  .related-tag:hover {
+    background: rgba(139, 92, 246, 0.12);
+    border-color: rgba(139, 92, 246, 0.3);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+  }
+
+  /* -- STREAM CURSOR -- */
+  .stream-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    background: linear-gradient(180deg, var(--grad-1), var(--grad-2));
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    animation: cursorBlink 0.8s ease-in-out infinite;
+    border-radius: 1px;
+  }
+
+  @keyframes cursorBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .stream-cursor.active {
+    animation: none;
+    opacity: 1;
+  }
+
+  .stream-cursor.hidden {
+    display: none;
+  }
+
+  /* -- CTA SECTION -- */
+  .cta-section {
+    margin-top: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    gap: 0.5rem;
+    animation: ctaReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1s both;
+  }
+
+  @keyframes ctaReveal {
+    0% { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .cta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none;
+    border: none;
+    font-family: var(--font-main);
+  }
+
+  .cta-pill.primary {
+    background: linear-gradient(135deg, var(--grad-1), var(--grad-2));
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+  }
+
+  .cta-pill.primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+  }
+
+  .cta-pill.secondary {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .cta-pill.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+  }
+
+  /* -- MAIN BUTTON -- */
+  .btn-discover {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-main);
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #fff;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    background: linear-gradient(135deg, var(--grad-1), var(--grad-2), var(--grad-3));
+    background-size: 200% 200%;
+    animation: btnGradient 4s ease infinite;
+    box-shadow:
+      0 4px 15px rgba(99, 102, 241, 0.3),
+      0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  @keyframes btnGradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .btn-discover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.15),
+      rgba(255, 255, 255, 0) 50%
+    );
+    pointer-events: none;
+  }
+
+  .btn-discover::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+  }
+
+  .btn-discover:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 25px rgba(99, 102, 241, 0.4),
+      0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-discover:hover:not(:disabled)::after {
+    width: 300px;
+    height: 300px;
+  }
+
+  .btn-discover:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .btn-discover:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .btn-icon {
+    font-size: 1.1rem;
+    transition: transform 0.3s ease;
+  }
+
+  .btn-discover:hover:not(:disabled) .btn-icon {
+    transform: rotate(180deg);
+  }
+
+  /* -- FOOTER -- */
+  .card-footer {
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .footer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .footer-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--grad-1), var(--grad-2));
+    animation: footerPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes footerPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* -- SUCCESS RIPPLE -- */
+  .ripple-effect {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .ripple-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(139, 92, 246, 0.3);
+    transform: translate(-50%, -50%) scale(0);
+    animation: ripple 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes ripple {
+    to {
+      transform: translate(-50%, -50%) scale(40);
+      opacity: 0;
+    }
+  }
+
+  /* -- RESPONSIVE -- */
+  @media (max-width: 480px) {
+    .card-header { padding: 1.5rem 1.5rem 0; }
+    .card-body { padding: 1.25rem 1.5rem 1.5rem; }
+    .card-footer { padding: 0.75rem 1.5rem; }
+    .keyword-display { font-size: 1.4rem; }
+    .section-box { padding: 0.75rem 1rem; }
+    .cta-section { flex-direction: column; }
+    .related-tags { gap: 0.3rem; }
+    .related-tag { font-size: 0.65rem; padding: 0.25rem 0.55rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND -->
+<div class="bg-gradient"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- MAIN -->
+<div class="main-container">
+  <div class="card" id="mainCard">
+
+    <!-- HEADER -->
+    <div class="card-header">
+      <div class="logo">
+        <div class="logo-mark">L</div>
+        <span class="logo-text">LINZ</span>
+      </div>
+      <div class="tagline">Knowledge Discovery Engine</div>
+    </div>
+
+    <!-- BODY -->
+    <div class="card-body">
+
+      <!-- OUTPUT AREA -->
+      <div class="output-area" id="outputArea">
+        <div class="idle-state">
+          <div class="idle-icon">?</div>
+          <div class="idle-text">
+            <strong>新しいキーワード</strong>があなたを待っています<br>
+            ボタンを押して発見しましょう
+          </div>
+        </div>
+      </div>
+
+      <!-- BUTTON -->
+      <button class="btn-discover" id="discoverBtn" onclick="discover()">
+        <span class="btn-content">
+          <span class="btn-icon">&#10227;</span>
+          <span>キーワードを発見する</span>
+        </span>
+      </button>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="card-footer">
+      <div class="footer-badge">
+        <div class="footer-dot"></div>
+        <span>LINZ PROTOTYPE-5</span>
+      </div>
+      <span id="runCounter">0 discoveries</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // -- MERMAID INIT --
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#6366f1',
+      primaryTextColor: '#f1f1f6',
+      primaryBorderColor: '#a855f7',
+      lineColor: '#a855f7',
+      secondaryColor: '#1e1e2e',
+      tertiaryColor: '#0f0f1a',
+      background: 'transparent',
+      mainBkg: '#1e1e2e',
+      nodeBorder: '#6366f1',
+      clusterBkg: 'rgba(99, 102, 241, 0.08)',
+      titleColor: '#f1f1f6',
+      edgeLabelBackground: '#1e1e2e'
+    },
+    flowchart: { curve: 'basis', padding: 15 },
+    fontSize: 13
+  });
+
+  // -- MOCK DATA --
+  const mockKeywords = [
+    {
+      keyword: "Quantum Entanglement",
+      category: "量子物理学",
+      definition: "2つ以上の量子粒子が互いに相関し、一方の測定結果が他方の状態を即座に決定する量子力学的現象。",
+      explanation: "量子もつれは1935年にアインシュタイン、ポドルスキー、ローゼンによって提唱されたEPRパラドックスに端を発します。例えば、もつれた2つの光子を地球の裏側に離しても、一方の偏光を測定した瞬間、他方の偏光が確定します。\n\nアインシュタインはこれを「不気味な遠隔作用（spooky action at a distance）」と呼びました。2022年のノーベル物理学賞は、ベルの不等式の破れを実証し量子もつれの実在を証明した研究に授与されています。",
+      diagram: "graph LR\n  A[光子A] -->|もつれ生成| E((量子もつれ状態))\n  B[光子B] -->|もつれ生成| E\n  E -->|測定| MA[測定A: スピン上]\n  E -->|即座に確定| MB[測定B: スピン下]\n  MA -.->|相関| MB",
+      useCases: [
+        "量子コンピュータの量子ビット間演算",
+        "量子暗号通信（BB84プロトコル）",
+        "量子テレポーテーション",
+        "量子センサーによる超高精度計測",
+        "分散型量子ネットワーク"
+      ],
+      relatedTerms: ["量子重ね合わせ", "量子デコヒーレンス", "ベルの不等式", "量子テレポーテーション", "量子コンピューティング", "量子暗号", "EPRパラドックス", "波動関数の収縮", "量子ビット", "シュレーディンガーの猫"]
+    },
+    {
+      keyword: "Biomimicry",
+      category: "デザイン工学 / 生物学",
+      definition: "自然界の構造・プロセス・生態系を模倣し、人間社会の技術的課題を解決するデザインアプローチ。",
+      explanation: "バイオミミクリーは「生命（bio）」と「模倣（mimesis）」を組み合わせた概念です。38億年の進化を経た自然界のソリューションを工学に応用します。\n\n代表的な例として、新幹線500系の先頭形状があります。トンネル進入時の騒音問題を解決するため、カワセミのくちばしの形状が採用されました。水から空気へ抵抗なく飛び込むカワセミの形態が、空気の壁を突破する際の衝撃波を抑制します。\n\nまた、マジックテープはスイスの技術者がゴボウの実の鉤構造にヒントを得て発明しました。",
+      diagram: "graph TD\n  N[自然界の観察] --> A[抽象化]\n  A --> D[デザイン原理の抽出]\n  D --> E[工学的実装]\n  E --> T[テスト・評価]\n  T -->|フィードバック| N\n  N --- ex1[カワセミ → 新幹線]\n  N --- ex2[ゴボウ → マジックテープ]\n  N --- ex3[ハスの葉 → 撥水素材]",
+      useCases: [
+        "建築設計（シロアリ塚を参考にした換気システム）",
+        "新素材開発（クモの糸の強度を模した繊維）",
+        "医療機器（サメ肌を模した抗菌表面）",
+        "ロボティクス（昆虫の歩行を模した多脚ロボット）",
+        "エネルギー効率化（鯨のひれを参考にした風力タービン）"
+      ],
+      relatedTerms: ["バイオインスパイアードデザイン", "持続可能性", "仿生学", "自然模倣技術", "グリーンテクノロジー", "エコデザイン", "進化的最適化", "構造色", "生体材料", "サステナブル工学"]
+    },
+    {
+      keyword: "Neuroplasticity",
+      category: "神経科学",
+      definition: "脳の神経回路が経験・学習・損傷に応じて構造的・機能的に再編成される能力。",
+      explanation: "かつて成人の脳は変化しないと信じられていましたが、神経可塑性の発見はこの常識を覆しました。脳は生涯を通じて新しいシナプス結合を形成し、不要な結合を刈り込みます。\n\nロンドンのタクシー運転手を対象とした有名な研究では、複雑な道路網を記憶する訓練によって海馬（空間記憶の中枢）が物理的に拡大することが示されました。\n\nまた、脳卒中後のリハビリでは、損傷した領域の機能を別の領域が代替する「機能的再編成」が起こります。楽器の練習やバイリンガル環境での生活も、脳の構造を変化させることが実証されています。",
+      diagram: "graph TD\n  S[刺激・経験] --> LTP[長期増強 LTP]\n  S --> LTD[長期抑圧 LTD]\n  LTP --> SG[シナプス強化]\n  LTD --> SW[シナプス弱化]\n  SG --> NR[神経回路の再編成]\n  SW --> NR\n  NR --> L[学習・適応]\n  NR --> R[損傷からの回復]",
+      useCases: [
+        "脳卒中後のリハビリテーション",
+        "学習障害の改善プログラム",
+        "認知症予防のための脳トレーニング",
+        "うつ病の認知行動療法",
+        "義肢制御のための脳-機械インターフェース"
+      ],
+      relatedTerms: ["シナプス可塑性", "長期増強", "海馬", "ミエリン化", "臨界期", "認知予備力", "ニューロフィードバック", "BDNF", "ヘッブ則", "ミラーニューロン"]
+    },
+    {
+      keyword: "Fermentation",
+      category: "生化学 / 食品科学",
+      definition: "微生物が酸素を使わずに有機物を分解し、エネルギーを得ながらアルコールや有機酸を生成する代謝プロセス。",
+      explanation: "発酵は人類最古のバイオテクノロジーの一つです。紀元前7000年頃の中国で、米や果実を使った酒が造られていた証拠があります。\n\n発酵にはアルコール発酵と乳酸発酵の2種類があります。パン酵母（Saccharomyces cerevisiae）は糖をエタノールとCO2に変換し、パンを膨らませビールを醸造します。乳酸菌はヨーグルトやキムチの酸味を生み出します。\n\n現代では、発酵技術はインスリンや抗生物質の製造、バイオ燃料の生産にまで拡大しています。",
+      diagram: "graph LR\n  G[グルコース C6H12O6] --> AF{発酵の種類}\n  AF -->|アルコール発酵| E[エタノール + CO2]\n  AF -->|乳酸発酵| L[乳酸]\n  E --> P1[パン・ビール・ワイン]\n  L --> P2[ヨーグルト・キムチ・味噌]",
+      useCases: [
+        "食品保存（漬物、チーズ、ソーセージ）",
+        "医薬品製造（抗生物質、インスリン）",
+        "バイオ燃料の生産（バイオエタノール）",
+        "腸内フローラの改善（プロバイオティクス）",
+        "工業用酵素の大量生産"
+      ],
+      relatedTerms: ["酵母", "乳酸菌", "嫌気呼吸", "好気呼吸", "代謝", "バイオリアクター", "麹菌", "プロバイオティクス", "酵素", "微生物学"]
+    },
+    {
+      keyword: "Chaos Theory",
+      category: "数学 / 複雑系科学",
+      definition: "決定論的なシステムにおいて、初期条件のわずかな差異が長期的に予測不能な大きな変化を引き起こすことを研究する数学理論。",
+      explanation: "カオス理論は1960年代、気象学者エドワード・ローレンツが天気予報シミュレーションで偶然発見しました。初期値のわずかな丸め誤差（0.506127を0.506に切り捨て）が、まったく異なる気象パターンを生み出したのです。\n\nこれが有名な「バタフライ効果」の起源です。ブラジルの蝶の羽ばたきがテキサスで竜巻を引き起こしうるという比喩は、非線形システムの本質を表しています。\n\nカオスは「無秩序」ではなく、背後に隠れたパターン（ストレンジアトラクター）を持つ「決定論的だが予測不能」な振る舞いです。",
+      diagram: "graph TD\n  IC1[初期条件 A] --> S[決定論的システム]\n  IC2[初期条件 A + 微小差] --> S\n  S --> R1[結果 X]\n  S --> R2[結果 Y 全く異なる]\n  R1 -.->|バタフライ効果| R2\n  S --- SA[ストレンジアトラクター]\n  SA --- F[フラクタル構造]",
+      useCases: [
+        "気象予測モデルの改善",
+        "株式市場の変動分析",
+        "心臓の不整脈パターンの検出",
+        "生態系の個体数変動シミュレーション",
+        "暗号化アルゴリズムへの応用"
+      ],
+      relatedTerms: ["バタフライ効果", "ストレンジアトラクター", "フラクタル", "非線形力学", "ローレンツ方程式", "リアプノフ指数", "マンデルブロ集合", "複雑適応系", "創発", "エントロピー"]
+    },
+    {
+      keyword: "CRISPR-Cas9",
+      category: "分子生物学 / 遺伝子工学",
+      definition: "細菌の免疫機構を応用した革命的なゲノム編集技術で、DNAの特定配列を高精度に切断・修正できるツール。",
+      explanation: "CRISPRは「Clustered Regularly Interspaced Short Palindromic Repeats」の略称です。もともと細菌がウイルスから身を守る免疫システムとして発見されました。\n\nジェニファー・ダウドナとエマニュエル・シャルパンティエが2012年にこの機構を汎用的なゲノム編集ツールに応用し、2020年にノーベル化学賞を受賞しました。\n\nガイドRNAがCas9酵素を標的DNAへ導き、正確にDNA二本鎖を切断します。これにより遺伝子の削除、修正、挿入が従来の100分の1のコストと時間で可能になりました。",
+      diagram: "graph LR\n  gRNA[ガイドRNA] --> Cas9[Cas9酵素]\n  Cas9 --> T[標的DNA配列を認識]\n  T --> Cut[DNA二本鎖を切断]\n  Cut --> NHEJ[非相同末端結合 → 遺伝子破壊]\n  Cut --> HDR[相同組換え修復 → 遺伝子修正]",
+      useCases: [
+        "遺伝性疾患の治療（鎌状赤血球症）",
+        "農作物の品種改良（耐病性、高収量）",
+        "感染症研究（ウイルス耐性の付与）",
+        "基礎研究（遺伝子機能の解明）",
+        "バイオ燃料生成微生物の設計"
+      ],
+      relatedTerms: ["ゲノム編集", "ガイドRNA", "遺伝子治療", "塩基編集", "エピジェネティクス", "トランスジェニック", "遺伝子ドライブ", "バイオエシックス", "プラスミド", "PCR"]
+    },
+    {
+      keyword: "Blockchain",
+      category: "情報科学 / 分散システム",
+      definition: "取引データをブロック単位で暗号学的に連鎖させ、中央管理者なしに改ざん耐性のある分散台帳を実現する技術。",
+      explanation: "ブロックチェーンは2008年にサトシ・ナカモトがBitcoinの基盤技術として提唱しました。各ブロックは前のブロックのハッシュ値を含み、一つのブロックを改ざんすると後続の全ブロックの再計算が必要になるため、事実上改ざんが不可能です。\n\nコンセンサスメカニズム（PoW、PoSなど）により、参加者全員が台帳の正当性を検証・合意します。\n\nEthereumはスマートコントラクト機能を追加し、自動執行される契約をブロックチェーン上で実現しました。これにより金融だけでなく、サプライチェーン管理やデジタルアイデンティティなど幅広い応用が生まれています。",
+      diagram: "graph LR\n  B1[Block 1\nHash: abc...] -->|abc...を参照| B2[Block 2\nHash: def...]\n  B2 -->|def...を参照| B3[Block 3\nHash: ghi...]\n  B3 -->|ghi...を参照| B4[Block 4\nHash: jkl...]\n  N1((Node A)) -.-> B1\n  N2((Node B)) -.-> B2\n  N3((Node C)) -.-> B3",
+      useCases: [
+        "暗号資産・決済システム",
+        "サプライチェーンの透明性確保",
+        "不動産登記のデジタル化",
+        "電子投票システム",
+        "NFTによるデジタル資産の所有権管理"
+      ],
+      relatedTerms: ["分散台帳", "ハッシュ関数", "コンセンサスアルゴリズム", "スマートコントラクト", "Proof of Work", "Proof of Stake", "DeFi", "NFT", "マークルツリー", "P2Pネットワーク"]
+    },
+    {
+      keyword: "Cognitive Bias",
+      category: "認知心理学 / 行動経済学",
+      definition: "人間の思考における体系的な偏りやパターンで、合理的判断から逸脱した意思決定を引き起こす心理的傾向。",
+      explanation: "認知バイアスは、ダニエル・カーネマンとエイモス・トヴェルスキーの研究（1970年代）で体系化されました。カーネマンは2002年にノーベル経済学賞を受賞しています。\n\n代表的なバイアスとして「確証バイアス」があります。自分の信念を支持する情報ばかりを集め、反証を無視する傾向です。SNSのフィルターバブルはこの傾向を増幅します。\n\n「アンカリング効果」では、最初に提示された数値が基準点となり、その後の判断を歪めます。不動産の値札や給与交渉で強力に作用します。これらは進化的に有利だった「素早い判断」の副産物でもあります。",
+      diagram: "graph TD\n  I[情報入力] --> S1{System 1\n直感的・高速}\n  I --> S2{System 2\n分析的・低速}\n  S1 --> B[認知バイアス発生]\n  S2 --> R[合理的判断]\n  B --> CB[確証バイアス]\n  B --> AE[アンカリング効果]\n  B --> AH[利用可能性ヒューリスティック]\n  S1 -.->|負荷が高いと| S2",
+      useCases: [
+        "マーケティング戦略（価格設定、商品配置）",
+        "UI/UXデザイン（ナッジ設計）",
+        "医療現場での診断精度向上",
+        "投資判断の改善",
+        "組織の意思決定プロセスの最適化"
+      ],
+      relatedTerms: ["ヒューリスティック", "確証バイアス", "アンカリング効果", "損失回避", "フレーミング効果", "ダニング・クルーガー効果", "正常性バイアス", "行動経済学", "プロスペクト理論", "ナッジ理論"]
+    },
+    {
+      keyword: "General Relativity",
+      category: "理論物理学",
+      definition: "質量とエネルギーが時空の曲率を決定し、その曲率が物体の運動を支配するとするアインシュタインの重力理論。",
+      explanation: "1915年にアインシュタインが発表した一般相対性理論は、ニュートンの万有引力に代わる重力の理論です。重力を「力」ではなく「時空の歪み」として記述します。\n\n有名な思考実験「エレベーターの実験」では、加速するエレベーター内の人が重力と加速度を区別できないことから、等価原理を導きます。\n\n一般相対性理論の予言は次々と実証されています。1919年の日食時の光の曲がり、GPSの時刻補正（衛星の時計は地上より1日あたり38マイクロ秒速く進む）、そして2015年のLIGOによる重力波の直接検出などです。",
+      diagram: "graph TD\n  M[質量・エネルギー] -->|決定する| C[時空の曲率]\n  C -->|支配する| MO[物体の運動経路]\n  MO -->|測地線に沿って移動| G[重力として観測]\n  C --> P1[光の屈曲]\n  C --> P2[時間の遅れ]\n  C --> P3[重力波]\n  C --> P4[ブラックホール]",
+      useCases: [
+        "GPS衛星の時刻補正",
+        "重力レンズによる遠方銀河の観測",
+        "ブラックホールの研究",
+        "宇宙の大規模構造シミュレーション",
+        "重力波天文学"
+      ],
+      relatedTerms: ["特殊相対性理論", "時空", "等価原理", "測地線", "重力波", "ブラックホール", "アインシュタイン方程式", "リーマン幾何学", "テンソル", "宇宙定数"]
+    },
+    {
+      keyword: "Photosynthesis",
+      category: "植物生理学 / 生化学",
+      definition: "植物・藻類・一部の細菌が光エネルギーを使って二酸化炭素と水から有機物と酸素を合成する生化学反応。",
+      explanation: "光合成は地球上のほぼすべての生命を支えるエネルギー変換プロセスです。年間約1,500億トンの炭素を固定し、大気中の酸素の大部分を供給しています。\n\n反応は2段階に分かれます。明反応（光化学反応）では葉緑体のチラコイド膜で水が分解され、ATPとNADPHが生成されます。暗反応（カルビン回路）ではこれらを使ってCO2を糖に変換します。\n\n光合成の効率は通常1〜2%ですが、人工光合成の研究では太陽光を直接燃料に変換する技術が開発されています。C4植物（トウモロコシ等）は光呼吸を抑制する仕組みを進化させ、より効率的な光合成を実現しています。",
+      diagram: "graph LR\n  L[光エネルギー] --> LR[明反応\nチラコイド膜]\n  H2O[水 H2O] --> LR\n  LR --> O2[酸素 O2]\n  LR --> ATP[ATP + NADPH]\n  ATP --> DR[暗反応\nカルビン回路]\n  CO2[二酸化炭素 CO2] --> DR\n  DR --> G[グルコース C6H12O6]",
+      useCases: [
+        "農業生産性の向上（C4光合成の導入研究）",
+        "人工光合成による水素燃料生産",
+        "バイオマスエネルギーの効率化",
+        "宇宙での食糧・酸素生成（宇宙農業）",
+        "CO2固定による気候変動対策"
+      ],
+      relatedTerms: ["クロロフィル", "カルビン回路", "チラコイド", "葉緑体", "光化学系", "RuBisCO", "C4植物", "CAM植物", "人工光合成", "炭素固定"]
+    }
+  ];
+
+  // -- STATE --
+  let isRunning = false;
+  let runCount = 0;
+  let streamTimeouts = [];
+  let lastKeywordIndex = -1;
+
+  // -- ELEMENTS --
+  const outputArea = document.getElementById('outputArea');
+  const discoverBtn = document.getElementById('discoverBtn');
+  const runCounter = document.getElementById('runCounter');
+  const mainCard = document.getElementById('mainCard');
+
+  // -- PICK RANDOM KEYWORD --
+  function pickKeyword() {
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * mockKeywords.length);
+    } while (idx === lastKeywordIndex && mockKeywords.length > 1);
+    lastKeywordIndex = idx;
+    return mockKeywords[idx];
+  }
+
+  // -- CLEAR ALL TIMEOUTS --
+  function clearAllTimeouts() {
+    streamTimeouts.forEach(t => clearTimeout(t));
+    streamTimeouts = [];
+  }
+
+  // -- STREAM TEXT --
+  function streamText(text, element, speed, cursorEl, onComplete) {
+    let i = 0;
+
+    function next() {
+      if (i < text.length) {
+        const char = text.charAt(i);
+        if (char === '\n') {
+          element.innerHTML += '<br>';
+        } else {
+          element.textContent += char;
+        }
+        i++;
+
+        let delay = speed;
+        if (char === '.' || char === '、' || char === '。') delay = speed * 3;
+        else if (char === ' ' || char === '　' || char === '\n') delay = speed * 0.3;
+        else delay = speed + Math.random() * (speed * 0.4);
+
+        const tid = setTimeout(next, delay);
+        streamTimeouts.push(tid);
+      } else {
+        if (cursorEl) cursorEl.classList.add('hidden');
+        if (onComplete) onComplete();
+      }
+    }
+
+    if (cursorEl) {
+      cursorEl.classList.remove('hidden');
+      cursorEl.classList.add('active');
+    }
+    next();
+  }
+
+  // -- STREAM LIST ITEMS --
+  function streamListItems(items, listEl, speed, onComplete) {
+    let idx = 0;
+
+    function nextItem() {
+      if (idx < items.length) {
+        const li = document.createElement('li');
+        li.style.opacity = '0';
+        li.style.transform = 'translateX(-8px)';
+        li.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        li.textContent = items[idx];
+        listEl.appendChild(li);
+        requestAnimationFrame(() => {
+          li.style.opacity = '1';
+          li.style.transform = 'translateX(0)';
+        });
+        idx++;
+        const tid = setTimeout(nextItem, speed);
+        streamTimeouts.push(tid);
+      } else {
+        if (onComplete) onComplete();
+      }
+    }
+
+    nextItem();
+  }
+
+  // -- STREAM TAGS --
+  function streamTags(terms, containerEl, speed, onComplete) {
+    let idx = 0;
+
+    function nextTag() {
+      if (idx < terms.length) {
+        const tag = document.createElement('span');
+        tag.className = 'related-tag';
+        tag.textContent = terms[idx];
+        tag.style.opacity = '0';
+        tag.style.transform = 'scale(0.8)';
+        tag.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+        tag.onclick = function() {
+          window.open('https://www.google.com/search?q=' + encodeURIComponent(terms[idx - 1]), '_blank');
+        };
+        containerEl.appendChild(tag);
+        requestAnimationFrame(() => {
+          tag.style.opacity = '1';
+          tag.style.transform = 'scale(1)';
+        });
+        idx++;
+        const tid = setTimeout(nextTag, speed);
+        streamTimeouts.push(tid);
+      } else {
+        if (onComplete) onComplete();
+      }
+    }
+
+    nextTag();
+  }
+
+  // -- RENDER LOADING --
+  function renderLoading() {
+    outputArea.innerHTML = `
+      <div class="loading-state">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">キーワードを探しています...</div>
+        <div class="loading-bar">
+          <div class="loading-bar-fill" id="loadingFill"></div>
+        </div>
+      </div>
+    `;
+
+    requestAnimationFrame(() => {
+      const fill = document.getElementById('loadingFill');
+      if (fill) {
+        fill.style.width = '25%';
+        setTimeout(() => { if (fill) fill.style.width = '55%'; }, 300);
+        setTimeout(() => { if (fill) fill.style.width = '80%'; }, 700);
+      }
+    });
+  }
+
+  // -- RENDER RESULT --
+  function renderResult(data) {
+    // Ripple
+    const ripple = document.createElement('div');
+    ripple.className = 'ripple-effect';
+    ripple.innerHTML = '<div class="ripple-ring"></div>';
+    mainCard.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 1000);
+
+    const hasDiagram = data.diagram && data.diagram.trim().length > 0;
+
+    outputArea.innerHTML = `
+      <div class="result-state">
+        <div class="keyword-label">KEYWORD</div>
+        <div class="keyword-display">${data.keyword}</div>
+        <div class="category-badge" id="categoryBadge" style="opacity:0">${data.category}</div>
+
+        <!-- Definition -->
+        <div class="section-box definition-box" id="definitionBox" style="opacity:0">
+          <div class="section-label">
+            <span class="section-label-icon">&#9670;</span> Definition
+          </div>
+          <div class="section-text" id="defText"></div>
+          <span class="stream-cursor hidden" id="defCursor"></span>
+        </div>
+
+        <!-- Explanation -->
+        <div class="section-box explanation-box" id="explanationBox" style="opacity:0">
+          <div class="section-label">
+            <span class="section-label-icon">&#9679;</span> Explanation
+          </div>
+          <div class="section-text" id="expText"></div>
+          <span class="stream-cursor hidden" id="expCursor"></span>
+        </div>
+
+        <!-- Diagram -->
+        ${hasDiagram ? `
+        <div class="diagram-container" id="diagramBox" style="opacity:0">
+          <div class="section-label">
+            <span class="section-label-icon">&#9701;</span> Diagram
+          </div>
+          <div class="mermaid" id="mermaidDiagram"></div>
+        </div>
+        ` : ''}
+
+        <!-- Use Cases -->
+        <div class="section-box usecases-box" id="usecasesBox" style="opacity:0">
+          <div class="section-label">
+            <span class="section-label-icon">&#9654;</span> Use Cases
+          </div>
+          <ul class="usecases-list" id="usecasesList"></ul>
+        </div>
+
+        <!-- Related Terms -->
+        <div class="related-section" id="relatedBox" style="opacity:0">
+          <div class="section-label">
+            <span class="section-label-icon">&#9830;</span> Related Terms
+          </div>
+          <div class="related-tags" id="relatedTags"></div>
+        </div>
+
+        <div class="cta-section">
+          <button class="cta-pill primary" onclick="window.open('https://www.google.com/search?q=' + encodeURIComponent('${data.keyword}'), '_blank')">
+            <span>&#x1F50D;</span>
+            <span>調べてみよう</span>
+          </button>
+          <button class="cta-pill secondary" onclick="discover()">
+            <span>&#10227;</span>
+            <span>次を発見する</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Sequential streaming of sections
+    const delay = 300;
+    let currentDelay = delay;
+
+    // 1. Category badge fade-in
+    const tid1 = setTimeout(() => {
+      const badge = document.getElementById('categoryBadge');
+      if (badge) { badge.style.opacity = '1'; badge.style.transition = 'opacity 0.4s ease'; }
+    }, currentDelay);
+    streamTimeouts.push(tid1);
+    currentDelay += 300;
+
+    // 2. Definition stream
+    const tid2 = setTimeout(() => {
+      const box = document.getElementById('definitionBox');
+      const text = document.getElementById('defText');
+      const cursor = document.getElementById('defCursor');
+      if (box) {
+        box.style.opacity = '1';
+        box.style.transition = 'opacity 0.4s ease';
+      }
+      if (text && cursor) {
+        streamText(data.definition, text, 20, cursor, () => {
+          // 3. Explanation stream
+          const tid3 = setTimeout(() => {
+            const eBox = document.getElementById('explanationBox');
+            const eText = document.getElementById('expText');
+            const eCursor = document.getElementById('expCursor');
+            if (eBox) {
+              eBox.style.opacity = '1';
+              eBox.style.transition = 'opacity 0.4s ease';
+            }
+            if (eText && eCursor) {
+              streamText(data.explanation, eText, 12, eCursor, () => {
+                // 4. Diagram
+                const renderAfterDiagram = () => {
+                  // 5. Use Cases
+                  const ucBox = document.getElementById('usecasesBox');
+                  const ucList = document.getElementById('usecasesList');
+                  if (ucBox) {
+                    ucBox.style.opacity = '1';
+                    ucBox.style.transition = 'opacity 0.4s ease';
+                  }
+                  if (ucList) {
+                    streamListItems(data.useCases, ucList, 150, () => {
+                      // 6. Related Terms
+                      const rBox = document.getElementById('relatedBox');
+                      const rTags = document.getElementById('relatedTags');
+                      if (rBox) {
+                        rBox.style.opacity = '1';
+                        rBox.style.transition = 'opacity 0.4s ease';
+                      }
+                      if (rTags) {
+                        streamTags(data.relatedTerms, rTags, 100, () => {
+                          isRunning = false;
+                          discoverBtn.disabled = false;
+                        });
+                      }
+                    });
+                  }
+                };
+
+                if (hasDiagram) {
+                  const tid4 = setTimeout(async () => {
+                    const dBox = document.getElementById('diagramBox');
+                    const dEl = document.getElementById('mermaidDiagram');
+                    if (dBox) {
+                      dBox.style.opacity = '1';
+                      dBox.style.transition = 'opacity 0.4s ease';
+                    }
+                    if (dEl) {
+                      try {
+                        const { svg } = await mermaid.render('mermaid-' + Date.now(), data.diagram);
+                        dEl.innerHTML = svg;
+                      } catch (e) {
+                        dEl.innerHTML = '<span style="color:var(--text-muted);font-size:0.8rem;">Diagram rendering unavailable</span>';
+                      }
+                    }
+                    const tid5 = setTimeout(renderAfterDiagram, 400);
+                    streamTimeouts.push(tid5);
+                  }, 300);
+                  streamTimeouts.push(tid4);
+                } else {
+                  const tid4 = setTimeout(renderAfterDiagram, 300);
+                  streamTimeouts.push(tid4);
+                }
+              });
+            }
+          }, 300);
+          streamTimeouts.push(tid3);
+        });
+      }
+    }, currentDelay);
+    streamTimeouts.push(tid2);
+  }
+
+  // -- MAIN DISCOVER FUNCTION --
+  function discover() {
+    if (isRunning) return;
+    isRunning = true;
+    discoverBtn.disabled = true;
+    runCount++;
+    runCounter.textContent = runCount + ' discoveries';
+
+    clearAllTimeouts();
+
+    renderLoading();
+
+    const delay = 1000 + Math.random() * 500;
+
+    setTimeout(() => {
+      const data = pickKeyword();
+      renderResult(data);
+    }, delay);
+  }
+</script>
+
+</body>
+</html>
