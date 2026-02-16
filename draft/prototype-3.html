@@ -27,7 +27,6 @@
 			--text-primary: #f0ece4;
 			--text-secondary: #9e9a92;
 			--text-dim: #5a5750;
-			--curtain-color: #0a0a0e;
 		}
 
 		html,
@@ -149,7 +148,7 @@
 
 		.stage-subtitle {
 			font-family: 'DM Mono', monospace;
-			font-size: 0.7rem;
+			font-size: 1rem;
 			letter-spacing: 0.35em;
 			text-transform: uppercase;
 			color: var(--accent-gold-dim);
@@ -276,86 +275,6 @@
 				transform: scale(1.2);
 				opacity: 1;
 			}
-		}
-
-		/* ============================================
-     LOADING STATE -- Curtain Pull
-     ============================================ */
-		.curtain-left,
-		.curtain-right {
-			position: fixed;
-			top: 0;
-			width: 50%;
-			height: 100%;
-			background: var(--curtain-color);
-			z-index: 50;
-			transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
-		}
-
-		.curtain-left {
-			left: 0;
-			transform: translateX(-100%);
-		}
-
-		.curtain-right {
-			right: 0;
-			transform: translateX(100%);
-		}
-
-		.curtain-left.closing {
-			transform: translateX(0);
-		}
-
-		.curtain-right.closing {
-			transform: translateX(0);
-		}
-
-		.curtain-left.opening {
-			transform: translateX(-100%);
-		}
-
-		.curtain-right.opening {
-			transform: translateX(100%);
-		}
-
-		/* Loading indicator on curtain */
-		.curtain-center {
-			position: fixed;
-			top: 50%;
-			left: 50%;
-			transform: translate(-50%, -50%);
-			z-index: 55;
-			opacity: 0;
-			transition: opacity 0.4s ease;
-			text-align: center;
-		}
-
-		.curtain-center.visible {
-			opacity: 1;
-		}
-
-		.loading-ring {
-			width: 48px;
-			height: 48px;
-			border: 2px solid var(--accent-gold-dim);
-			border-top-color: var(--accent-gold);
-			border-radius: 50%;
-			animation: spin 1s linear infinite;
-			margin: 0 auto 1.2rem;
-		}
-
-		@keyframes spin {
-			to {
-				transform: rotate(360deg);
-			}
-		}
-
-		.loading-text {
-			font-family: 'DM Mono', monospace;
-			font-size: 0.7rem;
-			letter-spacing: 0.3em;
-			color: var(--accent-gold-dim);
-			text-transform: uppercase;
 		}
 
 		/* ============================================
@@ -737,20 +656,12 @@
 	<div class="grain"></div>
 	<div class="scanlines"></div>
 
-	<!-- Curtain transition -->
-	<div class="curtain-left" id="curtainLeft"></div>
-	<div class="curtain-right" id="curtainRight"></div>
-	<div class="curtain-center" id="curtainCenter">
-		<div class="loading-ring"></div>
-		<div class="loading-text">Discovering</div>
-	</div>
-
 	<div class="scene">
 
 		<!-- IDLE STATE -->
 		<div class="stage" id="stage">
-			<div class="stage-subtitle">Keyword Discovery</div>
-			<div class="stage-title">未知との遭遇</div>
+			<div class="stage-subtitle">Enliminal</div>
+			<div class="stage-title">行ってみよう。飛んでみよう</div>
 			<div class="stage-tagline">An encounter with the unknown</div>
 			<button class="discover-btn" id="discoverBtn" onclick="discover()">
 				<div class="btn-glow"></div>
@@ -1189,22 +1100,13 @@
 			state = 'loading';
 
 			const keyword = getRandomKeyword();
-
-			// Phase 1: Close curtains
-			const curtainLeft = document.getElementById('curtainLeft');
-			const curtainRight = document.getElementById('curtainRight');
-			const curtainCenter = document.getElementById('curtainCenter');
 			const stage = document.getElementById('stage');
+			const reveal = document.getElementById('reveal');
 
-			curtainLeft.className = 'curtain-left closing';
-			curtainRight.className = 'curtain-right closing';
+			// Fade out stage
+			stage.classList.add('hidden');
 
-			setTimeout(() => {
-				stage.classList.add('hidden');
-				curtainCenter.classList.add('visible');
-			}, 600);
-
-			// Phase 2: Prepare reveal content behind curtain
+			// Prepare content during stage fade-out
 			setTimeout(() => {
 				document.getElementById('revealCategory').textContent = keyword.category;
 				document.getElementById('revealKeyword').textContent = keyword.word;
@@ -1219,25 +1121,19 @@
 				document.querySelectorAll('.content-section').forEach(s => s.classList.remove('visible'));
 
 				// Scroll reveal to top
-				document.getElementById('reveal').scrollTop = 0;
-			}, 1200);
+				reveal.scrollTop = 0;
+			}, 200);
 
-			// Phase 3: Open curtains to reveal
+			// Fade in reveal and start streaming
 			setTimeout(() => {
-				curtainCenter.classList.remove('visible');
-				curtainLeft.className = 'curtain-left opening';
-				curtainRight.className = 'curtain-right opening';
-
-				const reveal = document.getElementById('reveal');
 				reveal.classList.add('visible');
+				state = 'revealing';
 
-				// Phase 4: Start streaming content sections sequentially
+				// Start streaming content sections
 				setTimeout(() => {
 					streamAllSections(keyword);
-				}, 1200);
-
-				state = 'revealing';
-			}, 2200);
+				}, 400);
+			}, 600);
 		}
 
 		function discoverByTerm(termName) {
@@ -1251,21 +1147,16 @@
 
 			state = 'loading';
 
-			// Phase 1: Close curtains
-			const curtainLeft = document.getElementById('curtainLeft');
-			const curtainRight = document.getElementById('curtainRight');
-			const curtainCenter = document.getElementById('curtainCenter');
 			const stage = document.getElementById('stage');
+			const reveal = document.getElementById('reveal');
 
-			curtainLeft.className = 'curtain-left closing';
-			curtainRight.className = 'curtain-right closing';
+			// Fade out current reveal (if visible)
+			reveal.classList.remove('visible');
 
-			setTimeout(() => {
-				stage.classList.add('hidden');
-				curtainCenter.classList.add('visible');
-			}, 600);
+			// Fade out stage
+			stage.classList.add('hidden');
 
-			// Phase 2: Prepare reveal content behind curtain
+			// Prepare content during fade-out
 			setTimeout(() => {
 				document.getElementById('revealCategory').textContent = keyword.category;
 				document.getElementById('revealKeyword').textContent = keyword.word;
@@ -1280,25 +1171,19 @@
 				document.querySelectorAll('.content-section').forEach(s => s.classList.remove('visible'));
 
 				// Scroll reveal to top
-				document.getElementById('reveal').scrollTop = 0;
-			}, 1200);
+				reveal.scrollTop = 0;
+			}, 200);
 
-			// Phase 3: Open curtains to reveal
+			// Fade in reveal and start streaming
 			setTimeout(() => {
-				curtainCenter.classList.remove('visible');
-				curtainLeft.className = 'curtain-left opening';
-				curtainRight.className = 'curtain-right opening';
-
-				const reveal = document.getElementById('reveal');
 				reveal.classList.add('visible');
+				state = 'revealing';
 
-				// Phase 4: Start streaming content sections sequentially
+				// Start streaming content sections
 				setTimeout(() => {
 					streamAllSections(keyword);
-				}, 1200);
-
-				state = 'revealing';
-			}, 2200);
+				}, 400);
+			}, 600);
 		}
 
 		// ============================================
@@ -1533,24 +1418,21 @@
 
 			const reveal = document.getElementById('reveal');
 			const stage = document.getElementById('stage');
-			const curtainLeft = document.getElementById('curtainLeft');
-			const curtainRight = document.getElementById('curtainRight');
 
-			// Close curtains over reveal
-			curtainLeft.className = 'curtain-left closing';
-			curtainRight.className = 'curtain-right closing';
+			// Fade out reveal
+			reveal.classList.remove('visible');
 
+			// Clean up sections
 			setTimeout(() => {
-				reveal.classList.remove('visible');
 				document.getElementById('revealCta').classList.remove('visible');
 				document.querySelectorAll('.content-section').forEach(s => s.classList.remove('visible'));
-			}, 600);
+			}, 300);
 
-			// Immediately trigger next discovery (skip idle stage)
+			// Immediately trigger next discovery
 			setTimeout(() => {
 				state = 'idle';  // Set to idle so discover() can run
 				discover();      // Immediately start next discovery
-			}, 1200);
+			}, 600);
 		}
 	</script>
 </body>
