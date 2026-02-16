@@ -211,16 +211,6 @@
 			transform: scale(0.97);
 		}
 
-		/* Rotating dashed orbit */
-		.btn-orbit {
-			position: absolute;
-			width: calc(100% + 30px);
-			height: calc(100% + 30px);
-			border-radius: 50%;
-			border: 1px dashed var(--accent-gold-dim);
-			opacity: 0.3;
-			animation: orbit-spin 30s linear infinite;
-		}
 
 		@keyframes orbit-spin {
 			to {
@@ -228,53 +218,53 @@
 			}
 		}
 
-	.btn-label {
-		font-family: 'Noto Sans JP', sans-serif;
-		font-weight: 700;
-		font-size: clamp(1rem, 3vw, 1.3rem);
-		color: var(--accent-gold);
-		letter-spacing: 0.15em;
-		transition: color 0.3s ease, text-shadow 0.3s ease;
-		position: relative;
-		display: inline-block;
-	}
+		.btn-label {
+			font-family: 'Noto Sans JP', sans-serif;
+			font-weight: 700;
+			font-size: clamp(1rem, 3vw, 1.3rem);
+			color: var(--accent-gold);
+			letter-spacing: 0.15em;
+			transition: color 0.3s ease, text-shadow 0.3s ease;
+			position: relative;
+			display: inline-block;
+		}
 
-	.discover-btn:hover .btn-label {
-		color: var(--accent-gold-bright);
-		text-shadow:
-			0 0 10px rgba(201, 168, 76, 0.8),
-			0 0 20px rgba(201, 168, 76, 0.6),
-			0 0 30px rgba(201, 168, 76, 0.4);
-		animation: glitch-shift 0.3s ease-in-out;
-	}
+		.discover-btn:hover .btn-label {
+			color: var(--accent-gold-bright);
+			text-shadow:
+				0 0 10px rgba(201, 168, 76, 0.8),
+				0 0 20px rgba(201, 168, 76, 0.6),
+				0 0 30px rgba(201, 168, 76, 0.4);
+			animation: glitch-shift 0.3s ease-in-out;
+		}
 
-	/* RGB split effect with pseudo-elements */
-	.discover-btn:hover .btn-label::before,
-	.discover-btn:hover .btn-label::after {
-		content: '発見する';
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		opacity: 0.8;
-	}
+		/* RGB split effect with pseudo-elements */
+		.discover-btn:hover .btn-label::before,
+		.discover-btn:hover .btn-label::after {
+			content: '発見する';
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			opacity: 0.8;
+		}
 
-	.discover-btn:hover .btn-label::before {
-		color: rgba(255, 0, 80, 0.7);
-		animation: glitch-shift 0.25s ease-in-out infinite;
-		animation-delay: 0.05s;
-		transform: translate(-2px, 0);
-		mix-blend-mode: screen;
-	}
+		.discover-btn:hover .btn-label::before {
+			color: rgba(255, 0, 80, 0.7);
+			animation: glitch-shift 0.25s ease-in-out infinite;
+			animation-delay: 0.05s;
+			transform: translate(-2px, 0);
+			mix-blend-mode: screen;
+		}
 
-	.discover-btn:hover .btn-label::after {
-		color: rgba(0, 255, 255, 0.7);
-		animation: glitch-shift 0.25s ease-in-out infinite reverse;
-		animation-delay: 0.1s;
-		transform: translate(2px, 0);
-		mix-blend-mode: screen;
-	}
+		.discover-btn:hover .btn-label::after {
+			color: rgba(0, 255, 255, 0.7);
+			animation: glitch-shift 0.25s ease-in-out infinite reverse;
+			animation-delay: 0.1s;
+			transform: translate(2px, 0);
+			mix-blend-mode: screen;
+		}
 
 		.btn-hint {
 			margin-top: 2rem;
@@ -312,18 +302,22 @@
 			}
 		}
 
-	/* Glitch effect for button label */
-	@keyframes glitch-shift {
-		0%, 100% {
-			transform: translate(0, 0);
+		/* Glitch effect for button label */
+		@keyframes glitch-shift {
+
+			0%,
+			100% {
+				transform: translate(0, 0);
+			}
+
+			33% {
+				transform: translate(-2px, 1px);
+			}
+
+			66% {
+				transform: translate(2px, -1px);
+			}
 		}
-		33% {
-			transform: translate(-2px, 1px);
-		}
-		66% {
-			transform: translate(2px, -1px);
-		}
-	}
 
 		/* ============================================
      REVEAL STATE -- Keyword Display (Scrollable)
@@ -668,11 +662,6 @@
 				height: 130px;
 			}
 
-			.btn-orbit {
-				width: calc(100% + 20px);
-				height: calc(100% + 20px);
-			}
-
 			.reveal-inner {
 				padding: 2rem 1.2rem 3rem;
 			}
@@ -695,19 +684,20 @@
 			}
 		}
 
-	/* Accessibility: respect user preference for reduced motion */
-	@media (prefers-reduced-motion: reduce) {
-		.discover-btn:hover .btn-label,
-		.discover-btn:hover .btn-label::before,
-		.discover-btn:hover .btn-label::after {
-			animation: none;
-		}
+		/* Accessibility: respect user preference for reduced motion */
+		@media (prefers-reduced-motion: reduce) {
 
-		.discover-btn:hover .btn-label {
-			/* Keep color change but remove glitch */
-			text-shadow: 0 0 10px rgba(201, 168, 76, 0.6);
+			.discover-btn:hover .btn-label,
+			.discover-btn:hover .btn-label::before,
+			.discover-btn:hover .btn-label::after {
+				animation: none;
+			}
+
+			.discover-btn:hover .btn-label {
+				/* Keep color change but remove glitch */
+				text-shadow: 0 0 10px rgba(201, 168, 76, 0.6);
+			}
 		}
-	}
 	</style>
 </head>
 
@@ -727,7 +717,6 @@
 			<div class="stage-tagline">An encounter with the unknown</div>
 			<button class="discover-btn" id="discoverBtn" onclick="discover()">
 				<div class="btn-glow"></div>
-				<div class="btn-orbit"></div>
 				<div class="btn-ring">
 					<span class="btn-label">発見する</span>
 				</div>
