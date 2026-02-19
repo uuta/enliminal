@@ -429,6 +429,12 @@ body {
   line-height: 1.6;
 }
 
+.mermaid-output svg {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+}
+
 .usecases-section .usecases-list {
   list-style: none;
   padding: 0;

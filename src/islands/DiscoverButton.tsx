@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { fetchRandomKeyword } from "@/lib/wikipedia";
+import MermaidDiagram from "./MermaidDiagram";
 
 type AppState = "idle" | "loading" | "revealing";
 
@@ -236,7 +237,7 @@ export default function DiscoverButton() {
             >
               <div className="section-label">Diagram</div>
               <div className="diagram-container">
-                <pre className="diagram-code">{keyword.diagram}</pre>
+                <MermaidDiagram key={keyword.diagram} chart={keyword.diagram} />
               </div>
             </div>
           )}
