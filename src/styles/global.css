@@ -1,0 +1,588 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Noto+Sans+JP:wght@300;400;700;900&family=DM+Mono:wght@300;400&display=swap');
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-void: #08080a;
+  --bg-deep: #0d0d11;
+  --bg-surface: #14141a;
+  --accent-gold: #c9a84c;
+  --accent-gold-bright: #e6c55a;
+  --accent-gold-dim: #8a7235;
+  --text-primary: #f0ece4;
+  --text-secondary: #9e9a92;
+  --text-dim: #5a5750;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: 'Noto Sans JP', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Canvas for particle atmosphere ---- */
+#particle-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ---- Vignette overlay ---- */
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(8, 8, 10, 0.7) 100%);
+}
+
+/* ---- Grain texture overlay ---- */
+.grain {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain-drift 8s steps(10) infinite;
+}
+
+@keyframes grain-drift {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  30% { transform: translate(3%, -15%); }
+  50% { transform: translate(12%, 9%); }
+  70% { transform: translate(9%, 4%); }
+  90% { transform: translate(-1%, 7%); }
+}
+
+/* ---- Horizontal film lines ---- */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.03) 3px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+}
+
+/* ============================================
+   SCENE CONTAINER
+   ============================================ */
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+}
+
+/* ============================================
+   STAGE (IDLE STATE)
+   ============================================ */
+.stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 20;
+}
+
+.stage.hidden {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+.stage-subtitle {
+  font-family: 'DM Mono', monospace;
+  font-size: 1rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--accent-gold-dim);
+  margin-bottom: 2.5rem;
+  opacity: 0;
+  animation: fade-up 1s 0.3s ease forwards;
+}
+
+.stage-title {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 900;
+  font-size: clamp(1.4rem, 4vw, 2.2rem);
+  color: var(--text-primary);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+  opacity: 0;
+  animation: fade-up 1s 0.5s ease forwards;
+}
+
+.stage-tagline {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: clamp(0.85rem, 2vw, 1.05rem);
+  color: var(--text-secondary);
+  margin-bottom: 4rem;
+  opacity: 0;
+  animation: fade-up 1s 0.7s ease forwards;
+}
+
+/* ---- The Button ---- */
+.discover-btn {
+  position: relative;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  opacity: 0;
+  animation: fade-up 1s 1s ease forwards;
+}
+
+.discover-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.discover-btn .btn-ring {
+  width: clamp(140px, 28vw, 200px);
+  height: clamp(140px, 28vw, 200px);
+  border-radius: 50%;
+  border: 1.5px solid var(--accent-gold-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.5s ease, transform 0.5s ease, box-shadow 0.5s ease;
+  position: relative;
+}
+
+.discover-btn:not(:disabled):hover .btn-ring {
+  border-color: var(--accent-gold);
+  transform: scale(1.06);
+  box-shadow: 0 0 60px rgba(201, 168, 76, 0.1), inset 0 0 30px rgba(201, 168, 76, 0.03);
+}
+
+.discover-btn:not(:disabled):active .btn-ring {
+  transform: scale(0.97);
+}
+
+.btn-label {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1rem, 3vw, 1.3rem);
+  color: var(--accent-gold);
+  letter-spacing: 0.15em;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+  position: relative;
+  display: inline-block;
+}
+
+.discover-btn:not(:disabled):hover .btn-label {
+  color: var(--accent-gold-bright);
+  text-shadow:
+    0 0 10px rgba(201, 168, 76, 0.8),
+    0 0 20px rgba(201, 168, 76, 0.6),
+    0 0 30px rgba(201, 168, 76, 0.4);
+  animation: glitch-shift 0.3s ease-in-out;
+}
+
+.discover-btn:not(:disabled):hover .btn-label::before,
+.discover-btn:not(:disabled):hover .btn-label::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+}
+
+.discover-btn:not(:disabled):hover .btn-label::before {
+  color: rgba(255, 0, 80, 0.7);
+  animation: glitch-shift 0.25s ease-in-out infinite;
+  animation-delay: 0.05s;
+  transform: translate(-2px, 0);
+  mix-blend-mode: screen;
+}
+
+.discover-btn:not(:disabled):hover .btn-label::after {
+  color: rgba(0, 255, 255, 0.7);
+  animation: glitch-shift 0.25s ease-in-out infinite reverse;
+  animation-delay: 0.1s;
+  transform: translate(2px, 0);
+  mix-blend-mode: screen;
+}
+
+.btn-hint {
+  margin-top: 2rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: fade-up 1s 1.4s ease forwards;
+}
+
+.btn-glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 168, 76, 0.06) 0%, transparent 70%);
+  animation: breathe 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+@keyframes glitch-shift {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(-2px, 1px); }
+  66% { transform: translate(2px, -1px); }
+}
+
+/* ============================================
+   REVEAL STATE
+   ============================================ */
+.reveal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+  z-index: 20;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-gold-dim) transparent;
+}
+
+.reveal::-webkit-scrollbar { width: 4px; }
+.reveal::-webkit-scrollbar-track { background: transparent; }
+.reveal::-webkit-scrollbar-thumb { background: var(--accent-gold-dim); border-radius: 2px; }
+
+.reveal.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.reveal-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 740px;
+  padding: 3rem 2rem 4rem;
+  margin: 0 auto;
+}
+
+.reveal-category {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--accent-gold-dim);
+  margin-bottom: 1.5rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s 0.2s ease, transform 0.6s 0.2s ease;
+}
+
+.reveal.visible .reveal-category {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-keyword {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: clamp(2.4rem, 9vw, 5.5rem);
+  line-height: 1.05;
+  text-align: center;
+  color: var(--text-primary);
+  max-width: 90vw;
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  transition: opacity 0.8s 0.4s ease, transform 0.8s 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reveal.visible .reveal-keyword {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.reveal-accent {
+  width: 60px;
+  height: 1.5px;
+  background: var(--accent-gold);
+  margin: 2rem 0;
+  opacity: 0;
+  transform: scaleX(0);
+  transition: opacity 0.5s 0.8s ease, transform 0.6s 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.reveal.visible .reveal-accent {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+/* ============================================
+   CONTENT SECTIONS
+   ============================================ */
+.content-section {
+  width: 100%;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  margin-bottom: 2.2rem;
+}
+
+.content-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--accent-gold-dim);
+  margin-bottom: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--accent-gold-dim), transparent);
+  opacity: 0.3;
+}
+
+.definition-section .definition-text {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  line-height: 1.8;
+  color: var(--text-primary);
+}
+
+.explanation-section .explanation-text {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 300;
+  font-size: clamp(0.85rem, 2vw, 0.95rem);
+  line-height: 2;
+  color: var(--text-secondary);
+  white-space: pre-line;
+}
+
+/* -- Diagram section -- */
+.diagram-section .diagram-container {
+  background: rgba(20, 20, 26, 0.8);
+  border: 1px solid rgba(201, 168, 76, 0.12);
+  border-radius: 4px;
+  padding: 1.5rem;
+  overflow-x: auto;
+}
+
+.diagram-section .diagram-code {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: pre;
+  line-height: 1.6;
+}
+
+.usecases-section .usecases-list {
+  list-style: none;
+  padding: 0;
+}
+
+.usecases-section .usecases-list li {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 300;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  padding: 0.5rem 0;
+  padding-left: 1.2rem;
+  position: relative;
+}
+
+.usecases-section .usecases-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.95rem;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-gold-dim);
+}
+
+.related-terms-section .terms-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.related-terms-section .term-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--accent-gold);
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  background: rgba(201, 168, 76, 0.04);
+  padding: 0.4em 0.9em;
+  border-radius: 2px;
+  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+}
+
+.related-terms-section .term-tag:hover {
+  background: rgba(201, 168, 76, 0.1);
+  border-color: var(--accent-gold);
+  transform: scale(1.05);
+}
+
+.related-terms-section .term-tag:active {
+  transform: scale(0.98);
+  background: rgba(201, 168, 76, 0.15);
+}
+
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--accent-gold);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: blink-cursor 0.8s step-end infinite;
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* CTA section */
+.reveal-cta {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  padding-bottom: 2rem;
+}
+
+.reveal-cta.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cta-message {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  font-size: clamp(0.95rem, 2.5vw, 1.2rem);
+  color: var(--accent-gold);
+  letter-spacing: 0.12em;
+}
+
+.cta-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.reset-btn {
+  margin-top: 1rem;
+  border: 1px solid var(--text-dim);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  padding: 0.7em 2.5em;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease;
+}
+
+.reset-btn:hover {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  background: rgba(201, 168, 76, 0.05);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 600px) {
+  .reveal-keyword { font-size: clamp(2rem, 10vw, 3.5rem); }
+  .stage-title { font-size: 1.3rem; }
+  .discover-btn .btn-ring { width: 130px; height: 130px; }
+  .reveal-inner { padding: 2rem 1.2rem 3rem; }
+  .definition-section .definition-text { font-size: 0.95rem; }
+  .explanation-section .explanation-text { font-size: 0.85rem; }
+  .related-terms-section .term-tag { font-size: 0.65rem; padding: 0.35em 0.7em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discover-btn:not(:disabled):hover .btn-label,
+  .discover-btn:not(:disabled):hover .btn-label::before,
+  .discover-btn:not(:disabled):hover .btn-label::after {
+    animation: none;
+  }
+  .discover-btn:not(:disabled):hover .btn-label {
+    text-shadow: 0 0 10px rgba(201, 168, 76, 0.6);
+  }
+}
