@@ -30,6 +30,7 @@ export default function DiscoverButton() {
   const [isStreamingExp, setIsStreamingExp] = useState(false);
   const [diagramVisible, setDiagramVisible] = useState(false);
   const revealRef = useRef<HTMLDivElement>(null);
+  const discoverRef = useRef<() => Promise<void>>(async () => {});
 
   const showSection = useCallback((id: string) => {
     setVisibleSections((prev) => new Set([...prev, id]));
@@ -150,6 +151,7 @@ export default function DiscoverButton() {
       setAppState("idle");
     }
   }, [appState, showSection]);
+  discoverRef.current = discover;
 
   const reset = useCallback(() => {
     setRevealVisible(false);
@@ -164,9 +166,9 @@ export default function DiscoverButton() {
       setVisibleSections(new Set());
       setAppState("idle");
       // Auto-discover next
-      setTimeout(() => discover(), 100);
+      setTimeout(() => discoverRef.current(), 100);
     }, 600);
-  }, [discover]);
+  }, []);
 
   const stageHidden = appState !== "idle";
 
