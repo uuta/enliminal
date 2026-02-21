@@ -5,7 +5,6 @@ type Props = KeywordData;
 
 export function DiscoverContent({
   title,
-  pageUrl,
   category,
   definition,
   explanation,
