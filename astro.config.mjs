@@ -6,4 +6,5 @@ export default defineConfig({
   integrations: [react()],
   output: 'server',
   adapter: vercel(),
+  server: { port: 4421 },
 });
