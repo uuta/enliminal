@@ -1,4 +1,4 @@
-import MermaidDiagram from "./MermaidDiagram";
+import MermaidDiagram from "@/islands/MermaidDiagram";
 import type { KeywordData } from "@/lib/generateContent";
 
 type Props = KeywordData;

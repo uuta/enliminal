@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { StageButton } from '../StageButton';
+import { StageButton } from '@/islands/StageButton';
 
 describe('StageButton', () => {
   it('発見するリンクが/discoverを指している', () => {

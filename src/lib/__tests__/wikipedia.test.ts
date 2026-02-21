@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchRandomKeyword } from '../wikipedia';
+import { fetchRandomKeyword } from '@/lib/wikipedia';
 
 describe('Wikipedia API client', () => {
   beforeEach(() => {
