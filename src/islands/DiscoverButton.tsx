@@ -33,6 +33,15 @@ export default function DiscoverButton() {
   const revealRef = useRef<HTMLDivElement>(null);
   const discoverRef = useRef<() => Promise<void>>(async () => {});
 
+  const clearContentState = useCallback(() => {
+    setStreamedDef("");
+    setStreamedExp("");
+    setVisibleUseCases([]);
+    setVisibleTerms([]);
+    setDiagramVisible(false);
+    setVisibleSections(new Set());
+  }, []);
+
   const showSection = useCallback((id: string) => {
     setVisibleSections((prev) => new Set([...prev, id]));
   }, []);
@@ -52,13 +61,8 @@ export default function DiscoverButton() {
       const wiki = await fetchRandomKeyword();
 
       // Reset state
-      setStreamedDef("");
-      setStreamedExp("");
-      setVisibleUseCases([]);
-      setVisibleTerms([]);
+      clearContentState();
       setCtaVisible(false);
-      setVisibleSections(new Set());
-      setDiagramVisible(false);
       setRevealVisible(false);
 
       // Transition: fade stage out, then fade reveal in
@@ -151,25 +155,20 @@ export default function DiscoverButton() {
       console.error("discover error:", err);
       setAppState("idle");
     }
-  }, [appState, showSection]);
+  }, [appState, clearContentState, showSection]);
   discoverRef.current = discover;
 
   const reset = useCallback(() => {
     setRevealVisible(false);
     setCtaVisible(false);
     setTimeout(() => {
+      clearContentState();
       setKeyword(null);
-      setStreamedDef("");
-      setStreamedExp("");
-      setVisibleUseCases([]);
-      setVisibleTerms([]);
-      setDiagramVisible(false);
-      setVisibleSections(new Set());
       setAppState("idle");
       // Auto-discover next
       setTimeout(() => discoverRef.current(), 100);
     }, 600);
-  }, []);
+  }, [clearContentState]);
 
   const stageHidden = appState !== "idle";
 
