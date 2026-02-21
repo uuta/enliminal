@@ -1,4 +1,4 @@
-import MermaidDiagram from "@/islands/MermaidDiagram";
+import { MermaidDiagram } from "@/islands/MermaidDiagram";
 import type { KeywordData } from "@/lib/generateContent";
 
 type Props = KeywordData;
@@ -13,10 +13,7 @@ export function DiscoverContent({
   relatedTerms,
 }: Props) {
   return (
-    <div
-      className="reveal visible"
-      data-testid="reveal-container"
-    >
+    <div className="reveal visible" data-testid="reveal-container">
       <div className="reveal-inner">
         <div className="reveal-category">{category}</div>
         <div className="reveal-keyword" data-testid="reveal-keyword">

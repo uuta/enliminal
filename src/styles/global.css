@@ -159,6 +159,7 @@ body {
   background: transparent;
   cursor: pointer;
   outline: none;
+  text-decoration: none;
   opacity: 0;
   animation: fade-up 1s 1s ease forwards;
 }

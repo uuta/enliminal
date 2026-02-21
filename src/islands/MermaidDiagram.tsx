@@ -17,7 +17,7 @@ mermaid.initialize({
   },
 });
 
-export default function MermaidDiagram({ chart }: { chart: string }) {
+export function MermaidDiagram({ chart }: { chart: string }) {
   return (
     <div
       ref={(el) => {
