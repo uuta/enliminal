@@ -1,0 +1,72 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import DiscoverButton from '@/islands/DiscoverButton';
+---
+
+<Layout title="Enliminal">
+  <canvas id="particle-canvas"></canvas>
+  <div class="vignette"></div>
+  <div class="grain"></div>
+  <div class="scanlines"></div>
+
+  <div class="scene">
+    <DiscoverButton client:load />
+  </div>
+</Layout>
+
+<script>
+  // Particle system
+  const canvas = document.getElementById('particle-canvas') as HTMLCanvasElement;
+  const ctx = canvas.getContext('2d')!;
+  let particles: Array<{
+    x: number; y: number; vx: number; vy: number;
+    size: number; opacity: number; life: number;
+  }> = [];
+  const PARTICLE_COUNT = 60;
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function createParticle() {
+    return {
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: -Math.random() * 0.2 - 0.05,
+      size: Math.random() * 1.5 + 0.5,
+      opacity: Math.random() * 0.3 + 0.05,
+      life: Math.random(),
+    };
+  }
+
+  function initParticles() {
+    particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(createParticle());
+  }
+
+  function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life += 0.001;
+      if (p.y < -10 || p.x < -10 || p.x > canvas.width + 10 || p.life > 1) {
+        Object.assign(p, createParticle());
+        p.y = canvas.height + 10;
+        p.life = 0;
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(201, 168, 76, ${p.opacity * (1 - p.life)})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(animateParticles);
+  }
+
+  resizeCanvas();
+  initParticles();
+  animateParticles();
+  window.addEventListener('resize', () => { resizeCanvas(); initParticles(); });
+</script>
