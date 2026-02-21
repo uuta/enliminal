@@ -238,6 +238,34 @@ body {
   mix-blend-mode: screen;
 }
 
+/* ---- Loading overlay (shown while /discover loads) ---- */
+.stage-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg-void);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.stage-loading-text {
+  font-family: 'DM Mono', monospace;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  letter-spacing: 0.15em;
+  color: var(--accent-gold-dim);
+}
+
+.stage-loading-cursor {
+  display: inline-block;
+  width: 1px;
+  height: 1.1em;
+  background: var(--accent-gold-dim);
+  animation: blink-cursor 0.8s step-end infinite;
+  align-self: center;
+}
+
 .btn-hint {
   margin-top: 2rem;
   font-family: 'DM Mono', monospace;
