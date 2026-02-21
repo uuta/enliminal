@@ -1,16 +1,30 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import { StageButton } from '@/islands/StageButton';
+import { DiscoverContent } from '@/islands/DiscoverContent';
+import { fetchRandomKeyword } from '@/lib/wikipedia';
+import { generateKeywordContent } from '@/lib/generateContent';
+
+const wiki = await fetchRandomKeyword();
+const kwData = await generateKeywordContent(wiki.title, wiki.extract, wiki.pageUrl);
 ---
 
-<Layout title="Enliminal">
+<Layout title="Enliminal — 発見">
   <canvas id="particle-canvas"></canvas>
   <div class="vignette"></div>
   <div class="grain"></div>
   <div class="scanlines"></div>
-
   <div class="scene">
-    <StageButton client:load />
+    <DiscoverContent
+      client:load
+      title={kwData.title}
+      pageUrl={kwData.pageUrl}
+      category={kwData.category}
+      definition={kwData.definition}
+      explanation={kwData.explanation}
+      diagram={kwData.diagram}
+      useCases={kwData.useCases}
+      relatedTerms={kwData.relatedTerms}
+    />
   </div>
 </Layout>
 
