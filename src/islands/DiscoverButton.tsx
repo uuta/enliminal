@@ -46,13 +46,6 @@ export default function DiscoverButton() {
     setVisibleSections((prev) => new Set([...prev, id]));
   }, []);
 
-  const scrollTo = useCallback((el: HTMLElement | null) => {
-    if (!el || !revealRef.current) return;
-    const container = revealRef.current;
-    const top = el.offsetTop - container.offsetTop - 40;
-    container.scrollTo({ top, behavior: "smooth" });
-  }, []);
-
   const discover = useCallback(async () => {
     if (appState !== "idle") return;
     setAppState("loading");
@@ -66,12 +59,10 @@ export default function DiscoverButton() {
       setRevealVisible(false);
 
       // Transition: fade stage out, then fade reveal in
-      await delay(600);
       setRevealVisible(true);
       setAppState("revealing");
 
       // Fetch AI description
-      await delay(400);
       const res = await fetch("/api/gemini/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -118,7 +109,6 @@ export default function DiscoverButton() {
       setIsStreamingDef(false);
 
       // Stream Explanation
-      await delay(300);
       showSection("explanation");
       setIsStreamingExp(true);
       await typeText(kw.explanation, setStreamedExp, 18);
@@ -126,30 +116,23 @@ export default function DiscoverButton() {
 
       // Diagram
       if (kw.diagram) {
-        await delay(300);
         showSection("diagram");
         setDiagramVisible(true);
-        await delay(600);
       }
 
       // Use Cases
-      await delay(300);
       showSection("usecases");
       for (const uc of kw.useCases) {
         setVisibleUseCases((prev) => [...prev, uc]);
-        await delay(200);
       }
 
       // Related Terms
-      await delay(300);
       showSection("relatedterms");
       for (const term of kw.relatedTerms) {
         setVisibleTerms((prev) => [...prev, term]);
-        await delay(100);
       }
 
       // CTA
-      await delay(400);
       setCtaVisible(true);
     } catch (err) {
       console.error("discover error:", err);
@@ -290,12 +273,6 @@ export default function DiscoverButton() {
   );
 }
 
-// ---- helpers ----
-
-function delay(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
-
 async function typeText(
   text: string,
   setter: React.Dispatch<React.SetStateAction<string>>,
@@ -305,7 +282,5 @@ async function typeText(
     setter(text.slice(0, i));
     const char = text[i - 1] ?? "";
     const isPunctuation = "。、！？—「」\n".includes(char);
-    await delay(isPunctuation ? 160 : charDelay + Math.random() * 20);
   }
-  await delay(400);
 }
