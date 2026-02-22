@@ -19,7 +19,7 @@ interface Response {
   originalimage?: { source: string; width: number; height: number };
 }
 
-const WIKI_LANGS = [
+export const WIKI_LANGS = [
   "en",
   "ja",
   "de",
@@ -33,6 +33,7 @@ const WIKI_LANGS = [
   "it",
   "nl",
 ] as const;
+export type Language = (typeof WIKI_LANGS)[number];
 
 export async function fetchRandomKeyword(): Promise<Response> {
   const lang = WIKI_LANGS[Math.floor(Math.random() * WIKI_LANGS.length)];
