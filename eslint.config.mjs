@@ -19,6 +19,22 @@ export default [
     settings: { react: { version: "19" } },
   },
   {
+    files: ["**/*.{ts,tsx,js,mjs,astro}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["../*", "./*"],
+              message: "Use the @/ path alias instead of relative imports.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     ignores: ["dist/", ".astro/", "node_modules/", ".vercel/"],
   },
 ];
