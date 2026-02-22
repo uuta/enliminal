@@ -1,7 +1,7 @@
 import { MermaidDiagram } from "@/islands/MermaidDiagram";
 import type { KeywordData } from "@/lib/generateContent";
 
-type Props = KeywordData;
+type Props = KeywordData & { sources: string };
 
 export function DiscoverContent({
   title,
@@ -11,6 +11,7 @@ export function DiscoverContent({
   diagram,
   useCases,
   relatedTerms,
+  sources,
 }: Props) {
   return (
     <div className="reveal visible" data-testid="reveal-container">
@@ -69,7 +70,7 @@ export function DiscoverContent({
         <div className="reveal-cta visible">
           <div className="cta-message">行ってみよう。飛んでみよう</div>
           <div className="cta-sub">Let curiosity lead you forward</div>
-          <a href="/discover" className="reset-btn">
+          <a href={`/discover?sources=${sources}`} className="reset-btn">
             もう一回
           </a>
         </div>

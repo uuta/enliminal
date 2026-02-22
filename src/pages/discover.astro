@@ -10,7 +10,9 @@ const selected = rawSources.split(',').filter(
   (s): s is 'wikipedia' | 'hackernews' => s === 'wikipedia' || s === 'hackernews'
 );
 const sources = selected.length > 0 ? selected : ['wikipedia' as const];
+console.log("sources:", sources);
 const pick = sources[Math.floor(Math.random() * sources.length)];
+console.log("pick:", pick);
 
 const wiki = pick === 'hackernews'
   ? await fetchRandomHNKeyword()
@@ -27,6 +29,7 @@ const kwData = await generateKeywordContent(wiki.title, wiki.extract, wiki.pageU
   <div class="scene">
     <DiscoverContent
       client:load
+      sources={sources.join(',')}
       title={kwData.title}
       pageUrl={kwData.pageUrl}
       category={kwData.category}
