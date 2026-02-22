@@ -36,8 +36,6 @@ describe("Wikipedia API client", () => {
       }),
     );
 
-    await expect(fetchRandomKeyword()).rejects.toThrow(
-      "Wikipedia API error: 500",
-    );
+    await expect(fetchRandomKeyword()).rejects.toThrow("Wikipedia API error: 500");
   });
 });

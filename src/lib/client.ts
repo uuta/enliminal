@@ -10,9 +10,9 @@ export async function fetchRandomKeyword(sources: string): Promise<Keyword> {
 }
 
 export async function generateContent(kw: Keyword): Promise<KeywordData> {
-  const res = await fetch('/api/gemini/generate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const res = await fetch("/api/gemini/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ keyword: kw.title, extract: kw.extract, pageUrl: kw.pageUrl }),
   });
   if (!res.ok) throw new Error(`generate API error: ${res.status}`);

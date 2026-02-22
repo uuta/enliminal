@@ -1,817 +1,835 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Keyword Discovery</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Noto+Sans+JP:wght@300;400;700;900&family=DM+Mono:wght@300;400&display=swap");
 
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Keyword Discovery</title>
-	<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-	<style>
-		@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Noto+Sans+JP:wght@300;400;700;900&family=DM+Mono:wght@300;400&display=swap');
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-		*,
-		*::before,
-		*::after {
-			margin: 0;
-			padding: 0;
-			box-sizing: border-box;
-		}
+      :root {
+        --bg-void: #08080a;
+        --bg-deep: #0d0d11;
+        --bg-surface: #14141a;
+        --accent-gold: #c9a84c;
+        --accent-gold-bright: #e6c55a;
+        --accent-gold-dim: #8a7235;
+        --text-primary: #f0ece4;
+        --text-secondary: #9e9a92;
+        --text-dim: #5a5750;
+      }
 
-		:root {
-			--bg-void: #08080a;
-			--bg-deep: #0d0d11;
-			--bg-surface: #14141a;
-			--accent-gold: #c9a84c;
-			--accent-gold-bright: #e6c55a;
-			--accent-gold-dim: #8a7235;
-			--text-primary: #f0ece4;
-			--text-secondary: #9e9a92;
-			--text-dim: #5a5750;
-		}
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg-void);
+        color: var(--text-primary);
+        font-family: "Noto Sans JP", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
 
-		html,
-		body {
-			width: 100%;
-			height: 100%;
-			overflow: hidden;
-			background: var(--bg-void);
-			color: var(--text-primary);
-			font-family: 'Noto Sans JP', sans-serif;
-			-webkit-font-smoothing: antialiased;
-			-moz-osx-font-smoothing: grayscale;
-		}
+      /* ---- Canvas for particle atmosphere ---- */
+      #particle-canvas {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+      }
 
-		/* ---- Canvas for particle atmosphere ---- */
-		#particle-canvas {
-			position: fixed;
-			inset: 0;
-			z-index: 0;
-			pointer-events: none;
-		}
+      /* ---- Vignette overlay ---- */
+      .vignette {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background: radial-gradient(ellipse at center, transparent 40%, rgba(8, 8, 10, 0.7) 100%);
+      }
 
-		/* ---- Vignette overlay ---- */
-		.vignette {
-			position: fixed;
-			inset: 0;
-			z-index: 1;
-			pointer-events: none;
-			background: radial-gradient(ellipse at center, transparent 40%, rgba(8, 8, 10, 0.7) 100%);
-		}
+      /* ---- Grain texture overlay ---- */
+      .grain {
+        position: fixed;
+        inset: -50%;
+        width: 200%;
+        height: 200%;
+        z-index: 2;
+        pointer-events: none;
+        opacity: 0.035;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        animation: grain-drift 8s steps(10) infinite;
+      }
 
-		/* ---- Grain texture overlay ---- */
-		.grain {
-			position: fixed;
-			inset: -50%;
-			width: 200%;
-			height: 200%;
-			z-index: 2;
-			pointer-events: none;
-			opacity: 0.035;
-			background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-			animation: grain-drift 8s steps(10) infinite;
-		}
+      @keyframes grain-drift {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
 
-		@keyframes grain-drift {
+        10% {
+          transform: translate(-5%, -10%);
+        }
 
-			0%,
-			100% {
-				transform: translate(0, 0);
-			}
+        30% {
+          transform: translate(3%, -15%);
+        }
 
-			10% {
-				transform: translate(-5%, -10%);
-			}
+        50% {
+          transform: translate(12%, 9%);
+        }
 
-			30% {
-				transform: translate(3%, -15%);
-			}
+        70% {
+          transform: translate(9%, 4%);
+        }
 
-			50% {
-				transform: translate(12%, 9%);
-			}
+        90% {
+          transform: translate(-1%, 7%);
+        }
+      }
 
-			70% {
-				transform: translate(9%, 4%);
-			}
+      /* ---- Horizontal film lines ---- */
+      .scanlines {
+        position: fixed;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 3px,
+          rgba(0, 0, 0, 0.03) 3px,
+          rgba(0, 0, 0, 0.03) 4px
+        );
+      }
 
-			90% {
-				transform: translate(-1%, 7%);
-			}
-		}
-
-		/* ---- Horizontal film lines ---- */
-		.scanlines {
-			position: fixed;
-			inset: 0;
-			z-index: 2;
-			pointer-events: none;
-			background: repeating-linear-gradient(0deg,
-					transparent,
-					transparent 3px,
-					rgba(0, 0, 0, 0.03) 3px,
-					rgba(0, 0, 0, 0.03) 4px);
-		}
-
-		/* ============================================
+      /* ============================================
      SCENE CONTAINER
      ============================================ */
-		.scene {
-			position: fixed;
-			inset: 0;
-			z-index: 10;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			perspective: 1200px;
-		}
+      .scene {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        perspective: 1200px;
+      }
 
-		/* ============================================
+      /* ============================================
      IDLE STATE -- The Stage
      ============================================ */
-		.stage {
-			position: absolute;
-			inset: 0;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-				transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-			z-index: 20;
-		}
+      .stage {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition:
+          opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+          transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 20;
+      }
 
-		.stage.hidden {
-			opacity: 0;
-			transform: scale(1.05);
-			pointer-events: none;
-		}
+      .stage.hidden {
+        opacity: 0;
+        transform: scale(1.05);
+        pointer-events: none;
+      }
 
-		.stage-subtitle {
-			font-family: 'DM Mono', monospace;
-			font-size: 1rem;
-			letter-spacing: 0.35em;
-			text-transform: uppercase;
-			color: var(--accent-gold-dim);
-			margin-bottom: 2.5rem;
-			opacity: 0;
-			animation: fade-up 1s 0.3s ease forwards;
-		}
+      .stage-subtitle {
+        font-family: "DM Mono", monospace;
+        font-size: 1rem;
+        letter-spacing: 0.35em;
+        text-transform: uppercase;
+        color: var(--accent-gold-dim);
+        margin-bottom: 2.5rem;
+        opacity: 0;
+        animation: fade-up 1s 0.3s ease forwards;
+      }
 
-		.stage-title {
-			font-family: 'Noto Sans JP', sans-serif;
-			font-weight: 900;
-			font-size: clamp(1.4rem, 4vw, 2.2rem);
-			color: var(--text-primary);
-			letter-spacing: 0.08em;
-			margin-bottom: 0.5rem;
-			opacity: 0;
-			animation: fade-up 1s 0.5s ease forwards;
-		}
+      .stage-title {
+        font-family: "Noto Sans JP", sans-serif;
+        font-weight: 900;
+        font-size: clamp(1.4rem, 4vw, 2.2rem);
+        color: var(--text-primary);
+        letter-spacing: 0.08em;
+        margin-bottom: 0.5rem;
+        opacity: 0;
+        animation: fade-up 1s 0.5s ease forwards;
+      }
 
-		.stage-tagline {
-			font-family: 'Playfair Display', serif;
-			font-style: italic;
-			font-size: clamp(0.85rem, 2vw, 1.05rem);
-			color: var(--text-secondary);
-			margin-bottom: 4rem;
-			opacity: 0;
-			animation: fade-up 1s 0.7s ease forwards;
-		}
+      .stage-tagline {
+        font-family: "Playfair Display", serif;
+        font-style: italic;
+        font-size: clamp(0.85rem, 2vw, 1.05rem);
+        color: var(--text-secondary);
+        margin-bottom: 4rem;
+        opacity: 0;
+        animation: fade-up 1s 0.7s ease forwards;
+      }
 
-		/* ---- The Button ---- */
-		.discover-btn {
-			position: relative;
-			border: none;
-			background: transparent;
-			cursor: pointer;
-			outline: none;
-			opacity: 0;
-			animation: fade-up 1s 1s ease forwards;
-		}
+      /* ---- The Button ---- */
+      .discover-btn {
+        position: relative;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        outline: none;
+        opacity: 0;
+        animation: fade-up 1s 1s ease forwards;
+      }
 
-		.discover-btn .btn-ring {
-			width: clamp(140px, 28vw, 200px);
-			height: clamp(140px, 28vw, 200px);
-			border-radius: 50%;
-			border: 1.5px solid var(--accent-gold-dim);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			transition: border-color 0.5s ease, transform 0.5s ease, box-shadow 0.5s ease;
-			position: relative;
-		}
+      .discover-btn .btn-ring {
+        width: clamp(140px, 28vw, 200px);
+        height: clamp(140px, 28vw, 200px);
+        border-radius: 50%;
+        border: 1.5px solid var(--accent-gold-dim);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          border-color 0.5s ease,
+          transform 0.5s ease,
+          box-shadow 0.5s ease;
+        position: relative;
+      }
 
-		.discover-btn:hover .btn-ring {
-			border-color: var(--accent-gold);
-			transform: scale(1.06);
-			box-shadow: 0 0 60px rgba(201, 168, 76, 0.1), inset 0 0 30px rgba(201, 168, 76, 0.03);
-		}
+      .discover-btn:hover .btn-ring {
+        border-color: var(--accent-gold);
+        transform: scale(1.06);
+        box-shadow:
+          0 0 60px rgba(201, 168, 76, 0.1),
+          inset 0 0 30px rgba(201, 168, 76, 0.03);
+      }
 
-		.discover-btn:active .btn-ring {
-			transform: scale(0.97);
-		}
+      .discover-btn:active .btn-ring {
+        transform: scale(0.97);
+      }
 
+      @keyframes orbit-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
 
-		@keyframes orbit-spin {
-			to {
-				transform: rotate(360deg);
-			}
-		}
+      .btn-label {
+        font-family: "Noto Sans JP", sans-serif;
+        font-weight: 700;
+        font-size: clamp(1rem, 3vw, 1.3rem);
+        color: var(--accent-gold);
+        letter-spacing: 0.15em;
+        transition:
+          color 0.3s ease,
+          text-shadow 0.3s ease;
+        position: relative;
+        display: inline-block;
+      }
 
-		.btn-label {
-			font-family: 'Noto Sans JP', sans-serif;
-			font-weight: 700;
-			font-size: clamp(1rem, 3vw, 1.3rem);
-			color: var(--accent-gold);
-			letter-spacing: 0.15em;
-			transition: color 0.3s ease, text-shadow 0.3s ease;
-			position: relative;
-			display: inline-block;
-		}
+      .discover-btn:hover .btn-label {
+        color: var(--accent-gold-bright);
+        text-shadow:
+          0 0 10px rgba(201, 168, 76, 0.8),
+          0 0 20px rgba(201, 168, 76, 0.6),
+          0 0 30px rgba(201, 168, 76, 0.4);
+        animation: glitch-shift 0.3s ease-in-out;
+      }
 
-		.discover-btn:hover .btn-label {
-			color: var(--accent-gold-bright);
-			text-shadow:
-				0 0 10px rgba(201, 168, 76, 0.8),
-				0 0 20px rgba(201, 168, 76, 0.6),
-				0 0 30px rgba(201, 168, 76, 0.4);
-			animation: glitch-shift 0.3s ease-in-out;
-		}
+      /* RGB split effect with pseudo-elements */
+      .discover-btn:hover .btn-label::before,
+      .discover-btn:hover .btn-label::after {
+        content: "発見する";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.8;
+      }
 
-		/* RGB split effect with pseudo-elements */
-		.discover-btn:hover .btn-label::before,
-		.discover-btn:hover .btn-label::after {
-			content: '発見する';
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			opacity: 0.8;
-		}
+      .discover-btn:hover .btn-label::before {
+        color: rgba(255, 0, 80, 0.7);
+        animation: glitch-shift 0.25s ease-in-out infinite;
+        animation-delay: 0.05s;
+        transform: translate(-2px, 0);
+        mix-blend-mode: screen;
+      }
 
-		.discover-btn:hover .btn-label::before {
-			color: rgba(255, 0, 80, 0.7);
-			animation: glitch-shift 0.25s ease-in-out infinite;
-			animation-delay: 0.05s;
-			transform: translate(-2px, 0);
-			mix-blend-mode: screen;
-		}
+      .discover-btn:hover .btn-label::after {
+        color: rgba(0, 255, 255, 0.7);
+        animation: glitch-shift 0.25s ease-in-out infinite reverse;
+        animation-delay: 0.1s;
+        transform: translate(2px, 0);
+        mix-blend-mode: screen;
+      }
 
-		.discover-btn:hover .btn-label::after {
-			color: rgba(0, 255, 255, 0.7);
-			animation: glitch-shift 0.25s ease-in-out infinite reverse;
-			animation-delay: 0.1s;
-			transform: translate(2px, 0);
-			mix-blend-mode: screen;
-		}
+      .btn-hint {
+        margin-top: 2rem;
+        font-family: "DM Mono", monospace;
+        font-size: 0.65rem;
+        color: var(--text-dim);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        opacity: 0;
+        animation: fade-up 1s 1.4s ease forwards;
+      }
 
-		.btn-hint {
-			margin-top: 2rem;
-			font-family: 'DM Mono', monospace;
-			font-size: 0.65rem;
-			color: var(--text-dim);
-			letter-spacing: 0.2em;
-			text-transform: uppercase;
-			opacity: 0;
-			animation: fade-up 1s 1.4s ease forwards;
-		}
+      /* ---- Breathing glow behind button ---- */
+      .btn-glow {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(201, 168, 76, 0.06) 0%, transparent 70%);
+        animation: breathe 4s ease-in-out infinite;
+        pointer-events: none;
+      }
 
-		/* ---- Breathing glow behind button ---- */
-		.btn-glow {
-			position: absolute;
-			width: 300px;
-			height: 300px;
-			border-radius: 50%;
-			background: radial-gradient(circle, rgba(201, 168, 76, 0.06) 0%, transparent 70%);
-			animation: breathe 4s ease-in-out infinite;
-			pointer-events: none;
-		}
+      @keyframes breathe {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.5;
+        }
 
-		@keyframes breathe {
+        50% {
+          transform: scale(1.2);
+          opacity: 1;
+        }
+      }
 
-			0%,
-			100% {
-				transform: scale(1);
-				opacity: 0.5;
-			}
+      /* Glitch effect for button label */
+      @keyframes glitch-shift {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
 
-			50% {
-				transform: scale(1.2);
-				opacity: 1;
-			}
-		}
+        33% {
+          transform: translate(-2px, 1px);
+        }
 
-		/* Glitch effect for button label */
-		@keyframes glitch-shift {
+        66% {
+          transform: translate(2px, -1px);
+        }
+      }
 
-			0%,
-			100% {
-				transform: translate(0, 0);
-			}
-
-			33% {
-				transform: translate(-2px, 1px);
-			}
-
-			66% {
-				transform: translate(2px, -1px);
-			}
-		}
-
-		/* ============================================
+      /* ============================================
      REVEAL STATE -- Keyword Display (Scrollable)
      ============================================ */
-		.reveal {
-			position: absolute;
-			inset: 0;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			opacity: 0;
-			pointer-events: none;
-			transition: opacity 0.6s ease;
-			z-index: 20;
-			overflow-y: auto;
-			overflow-x: hidden;
-			-webkit-overflow-scrolling: touch;
-			scrollbar-width: thin;
-			scrollbar-color: var(--accent-gold-dim) transparent;
-		}
+      .reveal {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.6s ease;
+        z-index: 20;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: var(--accent-gold-dim) transparent;
+      }
 
-		.reveal::-webkit-scrollbar {
-			width: 4px;
-		}
+      .reveal::-webkit-scrollbar {
+        width: 4px;
+      }
 
-		.reveal::-webkit-scrollbar-track {
-			background: transparent;
-		}
+      .reveal::-webkit-scrollbar-track {
+        background: transparent;
+      }
 
-		.reveal::-webkit-scrollbar-thumb {
-			background: var(--accent-gold-dim);
-			border-radius: 2px;
-		}
+      .reveal::-webkit-scrollbar-thumb {
+        background: var(--accent-gold-dim);
+        border-radius: 2px;
+      }
 
-		.reveal.visible {
-			opacity: 1;
-			pointer-events: auto;
-		}
+      .reveal.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
 
-		/* Inner content wrapper with padding */
-		.reveal-inner {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			width: 100%;
-			max-width: 740px;
-			padding: 3rem 2rem 4rem;
-			margin: 0 auto;
-		}
+      /* Inner content wrapper with padding */
+      .reveal-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 740px;
+        padding: 3rem 2rem 4rem;
+        margin: 0 auto;
+      }
 
-		/* -- Header area -- */
-		.reveal-category {
-			font-family: 'DM Mono', monospace;
-			font-size: 0.65rem;
-			letter-spacing: 0.4em;
-			text-transform: uppercase;
-			color: var(--accent-gold-dim);
-			margin-bottom: 1.5rem;
-			opacity: 0;
-			transform: translateY(10px);
-			transition: opacity 0.6s 0.2s ease, transform 0.6s 0.2s ease;
-		}
+      /* -- Header area -- */
+      .reveal-category {
+        font-family: "DM Mono", monospace;
+        font-size: 0.65rem;
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+        color: var(--accent-gold-dim);
+        margin-bottom: 1.5rem;
+        opacity: 0;
+        transform: translateY(10px);
+        transition:
+          opacity 0.6s 0.2s ease,
+          transform 0.6s 0.2s ease;
+      }
 
-		.reveal.visible .reveal-category {
-			opacity: 1;
-			transform: translateY(0);
-		}
+      .reveal.visible .reveal-category {
+        opacity: 1;
+        transform: translateY(0);
+      }
 
-		.reveal-keyword {
-			font-family: 'Playfair Display', serif;
-			font-weight: 900;
-			font-size: clamp(2.4rem, 9vw, 5.5rem);
-			line-height: 1.05;
-			text-align: center;
-			color: var(--text-primary);
-			max-width: 90vw;
-			opacity: 0;
-			transform: translateY(20px) scale(0.95);
-			transition: opacity 0.8s 0.4s ease, transform 0.8s 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-		}
+      .reveal-keyword {
+        font-family: "Playfair Display", serif;
+        font-weight: 900;
+        font-size: clamp(2.4rem, 9vw, 5.5rem);
+        line-height: 1.05;
+        text-align: center;
+        color: var(--text-primary);
+        max-width: 90vw;
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+        transition:
+          opacity 0.8s 0.4s ease,
+          transform 0.8s 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
 
-		.reveal.visible .reveal-keyword {
-			opacity: 1;
-			transform: translateY(0) scale(1);
-		}
+      .reveal.visible .reveal-keyword {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
 
-		/* Gold underline accent */
-		.reveal-accent {
-			width: 60px;
-			height: 1.5px;
-			background: var(--accent-gold);
-			margin: 2rem 0;
-			opacity: 0;
-			transform: scaleX(0);
-			transition: opacity 0.5s 0.8s ease, transform 0.6s 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-			flex-shrink: 0;
-		}
+      /* Gold underline accent */
+      .reveal-accent {
+        width: 60px;
+        height: 1.5px;
+        background: var(--accent-gold);
+        margin: 2rem 0;
+        opacity: 0;
+        transform: scaleX(0);
+        transition:
+          opacity 0.5s 0.8s ease,
+          transform 0.6s 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        flex-shrink: 0;
+      }
 
-		.reveal.visible .reveal-accent {
-			opacity: 1;
-			transform: scaleX(1);
-		}
+      .reveal.visible .reveal-accent {
+        opacity: 1;
+        transform: scaleX(1);
+      }
 
-		/* ============================================
+      /* ============================================
      CONTENT SECTIONS (Schema fields)
      ============================================ */
-		.content-section {
-			width: 100%;
-			opacity: 0;
-			transform: translateY(16px);
-			transition: opacity 0.6s ease, transform 0.6s ease;
-			margin-bottom: 2.2rem;
-		}
+      .content-section {
+        width: 100%;
+        opacity: 0;
+        transform: translateY(16px);
+        transition:
+          opacity 0.6s ease,
+          transform 0.6s ease;
+        margin-bottom: 2.2rem;
+      }
 
-		.content-section.visible {
-			opacity: 1;
-			transform: translateY(0);
-		}
+      .content-section.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
 
-		.section-label {
-			font-family: 'DM Mono', monospace;
-			font-size: 0.6rem;
-			letter-spacing: 0.35em;
-			text-transform: uppercase;
-			color: var(--accent-gold-dim);
-			margin-bottom: 0.7rem;
-			display: flex;
-			align-items: center;
-			gap: 0.6rem;
-		}
+      .section-label {
+        font-family: "DM Mono", monospace;
+        font-size: 0.6rem;
+        letter-spacing: 0.35em;
+        text-transform: uppercase;
+        color: var(--accent-gold-dim);
+        margin-bottom: 0.7rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
 
-		.section-label::after {
-			content: '';
-			flex: 1;
-			height: 1px;
-			background: linear-gradient(to right, var(--accent-gold-dim), transparent);
-			opacity: 0.3;
-		}
+      .section-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(to right, var(--accent-gold-dim), transparent);
+        opacity: 0.3;
+      }
 
-		/* -- Definition section -- */
-		.definition-section .definition-text {
-			font-family: 'Noto Sans JP', sans-serif;
-			font-weight: 700;
-			font-size: clamp(1rem, 2.5vw, 1.2rem);
-			line-height: 1.8;
-			color: var(--text-primary);
-		}
+      /* -- Definition section -- */
+      .definition-section .definition-text {
+        font-family: "Noto Sans JP", sans-serif;
+        font-weight: 700;
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+        line-height: 1.8;
+        color: var(--text-primary);
+      }
 
-		/* -- Explanation section -- */
-		.explanation-section .explanation-text {
-			font-family: 'Noto Sans JP', sans-serif;
-			font-weight: 300;
-			font-size: clamp(0.85rem, 2vw, 0.95rem);
-			line-height: 2;
-			color: var(--text-secondary);
-		}
+      /* -- Explanation section -- */
+      .explanation-section .explanation-text {
+        font-family: "Noto Sans JP", sans-serif;
+        font-weight: 300;
+        font-size: clamp(0.85rem, 2vw, 0.95rem);
+        line-height: 2;
+        color: var(--text-secondary);
+      }
 
-		/* -- Diagram section -- */
-		.diagram-section .diagram-container {
-			background: rgba(20, 20, 26, 0.8);
-			border: 1px solid rgba(201, 168, 76, 0.12);
-			border-radius: 4px;
-			padding: 1.5rem;
-			overflow-x: auto;
-		}
+      /* -- Diagram section -- */
+      .diagram-section .diagram-container {
+        background: rgba(20, 20, 26, 0.8);
+        border: 1px solid rgba(201, 168, 76, 0.12);
+        border-radius: 4px;
+        padding: 1.5rem;
+        overflow-x: auto;
+      }
 
-		.diagram-section .diagram-container .mermaid {
-			display: flex;
-			justify-content: center;
-		}
+      .diagram-section .diagram-container .mermaid {
+        display: flex;
+        justify-content: center;
+      }
 
-		.diagram-section .diagram-container .mermaid svg {
-			max-width: 100%;
-			height: auto;
-		}
+      .diagram-section .diagram-container .mermaid svg {
+        max-width: 100%;
+        height: auto;
+      }
 
-		/* -- Use cases section -- */
-		.usecases-section .usecases-list {
-			list-style: none;
-			padding: 0;
-		}
+      /* -- Use cases section -- */
+      .usecases-section .usecases-list {
+        list-style: none;
+        padding: 0;
+      }
 
-		.usecases-section .usecases-list li {
-			font-family: 'Noto Sans JP', sans-serif;
-			font-weight: 300;
-			font-size: 0.9rem;
-			line-height: 1.7;
-			color: var(--text-secondary);
-			padding: 0.5rem 0;
-			padding-left: 1.2rem;
-			position: relative;
-		}
+      .usecases-section .usecases-list li {
+        font-family: "Noto Sans JP", sans-serif;
+        font-weight: 300;
+        font-size: 0.9rem;
+        line-height: 1.7;
+        color: var(--text-secondary);
+        padding: 0.5rem 0;
+        padding-left: 1.2rem;
+        position: relative;
+      }
 
-		.usecases-section .usecases-list li::before {
-			content: '';
-			position: absolute;
-			left: 0;
-			top: 0.95rem;
-			width: 5px;
-			height: 5px;
-			border-radius: 50%;
-			background: var(--accent-gold-dim);
-		}
+      .usecases-section .usecases-list li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.95rem;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--accent-gold-dim);
+      }
 
-		/* -- Related terms section -- */
-		.related-terms-section .terms-grid {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 0.5rem;
-		}
+      /* -- Related terms section -- */
+      .related-terms-section .terms-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
 
-		.related-terms-section .term-tag {
-			font-family: 'DM Mono', monospace;
-			font-size: 0.72rem;
-			letter-spacing: 0.05em;
-			color: var(--accent-gold);
-			border: 1px solid rgba(201, 168, 76, 0.25);
-			background: rgba(201, 168, 76, 0.04);
-			padding: 0.4em 0.9em;
-			border-radius: 2px;
-			transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
-			cursor: pointer;
-		}
+      .related-terms-section .term-tag {
+        font-family: "DM Mono", monospace;
+        font-size: 0.72rem;
+        letter-spacing: 0.05em;
+        color: var(--accent-gold);
+        border: 1px solid rgba(201, 168, 76, 0.25);
+        background: rgba(201, 168, 76, 0.04);
+        padding: 0.4em 0.9em;
+        border-radius: 2px;
+        transition:
+          background 0.3s ease,
+          border-color 0.3s ease,
+          transform 0.3s ease;
+        cursor: pointer;
+      }
 
-		.related-terms-section .term-tag:hover {
-			background: rgba(201, 168, 76, 0.1);
-			border-color: var(--accent-gold);
-			transform: scale(1.05);
-		}
+      .related-terms-section .term-tag:hover {
+        background: rgba(201, 168, 76, 0.1);
+        border-color: var(--accent-gold);
+        transform: scale(1.05);
+      }
 
-		.related-terms-section .term-tag:active {
-			transform: scale(0.98);
-			background: rgba(201, 168, 76, 0.15);
-		}
+      .related-terms-section .term-tag:active {
+        transform: scale(0.98);
+        background: rgba(201, 168, 76, 0.15);
+      }
 
-		/* -- Streaming cursor -- */
-		.cursor {
-			display: inline-block;
-			width: 2px;
-			height: 1em;
-			background: var(--accent-gold);
-			vertical-align: text-bottom;
-			margin-left: 2px;
-			animation: blink-cursor 0.8s step-end infinite;
-		}
+      /* -- Streaming cursor -- */
+      .cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1em;
+        background: var(--accent-gold);
+        vertical-align: text-bottom;
+        margin-left: 2px;
+        animation: blink-cursor 0.8s step-end infinite;
+      }
 
-		@keyframes blink-cursor {
+      @keyframes blink-cursor {
+        0%,
+        100% {
+          opacity: 1;
+        }
 
-			0%,
-			100% {
-				opacity: 1;
-			}
+        50% {
+          opacity: 0;
+        }
+      }
 
-			50% {
-				opacity: 0;
-			}
-		}
+      /* CTA section */
+      .reveal-cta {
+        margin-top: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.2rem;
+        opacity: 0;
+        transform: translateY(15px);
+        transition:
+          opacity 0.6s ease,
+          transform 0.6s ease;
+        padding-bottom: 2rem;
+      }
 
-		/* CTA section */
-		.reveal-cta {
-			margin-top: 1.5rem;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 1.2rem;
-			opacity: 0;
-			transform: translateY(15px);
-			transition: opacity 0.6s ease, transform 0.6s ease;
-			padding-bottom: 2rem;
-		}
+      .reveal-cta.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
 
-		.reveal-cta.visible {
-			opacity: 1;
-			transform: translateY(0);
-		}
+      .cta-message {
+        font-family: "Noto Sans JP", sans-serif;
+        font-weight: 700;
+        font-size: clamp(0.95rem, 2.5vw, 1.2rem);
+        color: var(--accent-gold);
+        letter-spacing: 0.12em;
+      }
 
-		.cta-message {
-			font-family: 'Noto Sans JP', sans-serif;
-			font-weight: 700;
-			font-size: clamp(0.95rem, 2.5vw, 1.2rem);
-			color: var(--accent-gold);
-			letter-spacing: 0.12em;
-		}
+      .cta-sub {
+        font-family: "DM Mono", monospace;
+        font-size: 0.6rem;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+      }
 
-		.cta-sub {
-			font-family: 'DM Mono', monospace;
-			font-size: 0.6rem;
-			letter-spacing: 0.3em;
-			text-transform: uppercase;
-			color: var(--text-dim);
-		}
+      .reset-btn {
+        margin-top: 1rem;
+        border: 1px solid var(--text-dim);
+        background: transparent;
+        color: var(--text-secondary);
+        font-family: "Noto Sans JP", sans-serif;
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        padding: 0.7em 2.5em;
+        cursor: pointer;
+        border-radius: 6px;
+        transition:
+          border-color 0.3s ease,
+          color 0.3s ease,
+          background 0.3s ease;
+      }
 
-		.reset-btn {
-			margin-top: 1rem;
-			border: 1px solid var(--text-dim);
-			background: transparent;
-			color: var(--text-secondary);
-			font-family: 'Noto Sans JP', sans-serif;
-			font-size: 0.8rem;
-			letter-spacing: 0.12em;
-			padding: 0.7em 2.5em;
-			cursor: pointer;
-			border-radius: 6px;
-			transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease;
-		}
+      .reset-btn:hover {
+        border-color: var(--accent-gold);
+        color: var(--accent-gold);
+        background: rgba(201, 168, 76, 0.05);
+      }
 
-		.reset-btn:hover {
-			border-color: var(--accent-gold);
-			color: var(--accent-gold);
-			background: rgba(201, 168, 76, 0.05);
-		}
-
-		/* ============================================
+      /* ============================================
      ANIMATIONS
      ============================================ */
-		@keyframes fade-up {
-			from {
-				opacity: 0;
-				transform: translateY(15px);
-			}
+      @keyframes fade-up {
+        from {
+          opacity: 0;
+          transform: translateY(15px);
+        }
 
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-		/* ============================================
+      /* ============================================
      RESPONSIVE
      ============================================ */
-		@media (max-width: 600px) {
-			.reveal-keyword {
-				font-size: clamp(2rem, 10vw, 3.5rem);
-			}
+      @media (max-width: 600px) {
+        .reveal-keyword {
+          font-size: clamp(2rem, 10vw, 3.5rem);
+        }
 
-			.stage-title {
-				font-size: 1.3rem;
-			}
+        .stage-title {
+          font-size: 1.3rem;
+        }
 
-			.discover-btn .btn-ring {
-				width: 130px;
-				height: 130px;
-			}
+        .discover-btn .btn-ring {
+          width: 130px;
+          height: 130px;
+        }
 
-			.reveal-inner {
-				padding: 2rem 1.2rem 3rem;
-			}
+        .reveal-inner {
+          padding: 2rem 1.2rem 3rem;
+        }
 
-			.definition-section .definition-text {
-				font-size: 0.95rem;
-			}
+        .definition-section .definition-text {
+          font-size: 0.95rem;
+        }
 
-			.explanation-section .explanation-text {
-				font-size: 0.85rem;
-			}
+        .explanation-section .explanation-text {
+          font-size: 0.85rem;
+        }
 
-			.related-terms-section .term-tag {
-				font-size: 0.65rem;
-				padding: 0.35em 0.7em;
-			}
+        .related-terms-section .term-tag {
+          font-size: 0.65rem;
+          padding: 0.35em 0.7em;
+        }
 
-			.diagram-section .diagram-container {
-				padding: 1rem;
-			}
-		}
+        .diagram-section .diagram-container {
+          padding: 1rem;
+        }
+      }
 
-		/* Accessibility: respect user preference for reduced motion */
-		@media (prefers-reduced-motion: reduce) {
+      /* Accessibility: respect user preference for reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        .discover-btn:hover .btn-label,
+        .discover-btn:hover .btn-label::before,
+        .discover-btn:hover .btn-label::after {
+          animation: none;
+        }
 
-			.discover-btn:hover .btn-label,
-			.discover-btn:hover .btn-label::before,
-			.discover-btn:hover .btn-label::after {
-				animation: none;
-			}
+        .discover-btn:hover .btn-label {
+          /* Keep color change but remove glitch */
+          text-shadow: 0 0 10px rgba(201, 168, 76, 0.6);
+        }
+      }
+    </style>
+  </head>
 
-			.discover-btn:hover .btn-label {
-				/* Keep color change but remove glitch */
-				text-shadow: 0 0 10px rgba(201, 168, 76, 0.6);
-			}
-		}
-	</style>
-</head>
+  <body>
+    <canvas id="particle-canvas"></canvas>
+    <div class="vignette"></div>
+    <div class="grain"></div>
+    <div class="scanlines"></div>
 
-<body>
+    <div class="scene">
+      <!-- IDLE STATE -->
+      <div class="stage" id="stage">
+        <div class="stage-subtitle">Enliminal</div>
+        <div class="stage-title">行ってみよう。飛んでみよう</div>
+        <div class="stage-tagline">An encounter with the unknown</div>
+        <button class="discover-btn" id="discoverBtn" onclick="discover()">
+          <div class="btn-glow"></div>
+          <div class="btn-ring">
+            <span class="btn-label">発見する</span>
+          </div>
+        </button>
+        <div class="btn-hint">tap to unveil a new world</div>
+      </div>
 
-	<canvas id="particle-canvas"></canvas>
-	<div class="vignette"></div>
-	<div class="grain"></div>
-	<div class="scanlines"></div>
+      <!-- REVEAL STATE -->
+      <div class="reveal" id="reveal">
+        <div class="reveal-inner">
+          <div class="reveal-category" id="revealCategory"></div>
+          <div class="reveal-keyword" id="revealKeyword"></div>
+          <div class="reveal-accent"></div>
 
-	<div class="scene">
+          <!-- Definition -->
+          <div class="content-section definition-section" id="sectionDefinition">
+            <div class="section-label">Definition</div>
+            <div class="definition-text" id="definitionText"></div>
+          </div>
 
-		<!-- IDLE STATE -->
-		<div class="stage" id="stage">
-			<div class="stage-subtitle">Enliminal</div>
-			<div class="stage-title">行ってみよう。飛んでみよう</div>
-			<div class="stage-tagline">An encounter with the unknown</div>
-			<button class="discover-btn" id="discoverBtn" onclick="discover()">
-				<div class="btn-glow"></div>
-				<div class="btn-ring">
-					<span class="btn-label">発見する</span>
-				</div>
-			</button>
-			<div class="btn-hint">tap to unveil a new world</div>
-		</div>
+          <!-- Explanation -->
+          <div class="content-section explanation-section" id="sectionExplanation">
+            <div class="section-label">Explanation</div>
+            <div class="explanation-text" id="explanationText"></div>
+          </div>
 
-		<!-- REVEAL STATE -->
-		<div class="reveal" id="reveal">
-			<div class="reveal-inner">
-				<div class="reveal-category" id="revealCategory"></div>
-				<div class="reveal-keyword" id="revealKeyword"></div>
-				<div class="reveal-accent"></div>
+          <!-- Diagram -->
+          <div class="content-section diagram-section" id="sectionDiagram">
+            <div class="section-label">Diagram</div>
+            <div class="diagram-container">
+              <div class="mermaid" id="diagramContent"></div>
+            </div>
+          </div>
 
-				<!-- Definition -->
-				<div class="content-section definition-section" id="sectionDefinition">
-					<div class="section-label">Definition</div>
-					<div class="definition-text" id="definitionText"></div>
-				</div>
+          <!-- Use Cases -->
+          <div class="content-section usecases-section" id="sectionUseCases">
+            <div class="section-label">Use Cases</div>
+            <ul class="usecases-list" id="useCasesList"></ul>
+          </div>
 
-				<!-- Explanation -->
-				<div class="content-section explanation-section" id="sectionExplanation">
-					<div class="section-label">Explanation</div>
-					<div class="explanation-text" id="explanationText"></div>
-				</div>
+          <!-- Related Terms -->
+          <div class="content-section related-terms-section" id="sectionRelatedTerms">
+            <div class="section-label">Related Terms</div>
+            <div class="terms-grid" id="termsGrid"></div>
+          </div>
 
-				<!-- Diagram -->
-				<div class="content-section diagram-section" id="sectionDiagram">
-					<div class="section-label">Diagram</div>
-					<div class="diagram-container">
-						<div class="mermaid" id="diagramContent"></div>
-					</div>
-				</div>
+          <!-- CTA -->
+          <div class="reveal-cta" id="revealCta">
+            <div class="cta-message">行ってみよう。飛んでみよう</div>
+            <div class="cta-sub">Let curiosity lead you forward</div>
+            <button class="reset-btn" onclick="reset()">もう一回</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-				<!-- Use Cases -->
-				<div class="content-section usecases-section" id="sectionUseCases">
-					<div class="section-label">Use Cases</div>
-					<ul class="usecases-list" id="useCasesList"></ul>
-				</div>
+    <script>
+      // ============================================
+      // MERMAID INIT
+      // ============================================
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: "dark",
+        themeVariables: {
+          darkMode: true,
+          background: "#14141a",
+          primaryColor: "#2a2520",
+          primaryTextColor: "#f0ece4",
+          primaryBorderColor: "#c9a84c",
+          lineColor: "#8a7235",
+          secondaryColor: "#1a1a22",
+          tertiaryColor: "#14141a",
+          fontFamily: '"DM Mono", monospace',
+          fontSize: "13px",
+          nodeBorder: "#c9a84c",
+          mainBkg: "#1a1a22",
+          clusterBkg: "#14141a",
+          clusterBorder: "#8a7235",
+          edgeLabelBackground: "#14141a",
+          nodeTextColor: "#f0ece4",
+        },
+      });
 
-				<!-- Related Terms -->
-				<div class="content-section related-terms-section" id="sectionRelatedTerms">
-					<div class="section-label">Related Terms</div>
-					<div class="terms-grid" id="termsGrid"></div>
-				</div>
-
-				<!-- CTA -->
-				<div class="reveal-cta" id="revealCta">
-					<div class="cta-message">行ってみよう。飛んでみよう</div>
-					<div class="cta-sub">Let curiosity lead you forward</div>
-					<button class="reset-btn" onclick="reset()">もう一回</button>
-				</div>
-			</div>
-		</div>
-
-	</div>
-
-	<script>
-		// ============================================
-		// MERMAID INIT
-		// ============================================
-		mermaid.initialize({
-			startOnLoad: false,
-			theme: 'dark',
-			themeVariables: {
-				darkMode: true,
-				background: '#14141a',
-				primaryColor: '#2a2520',
-				primaryTextColor: '#f0ece4',
-				primaryBorderColor: '#c9a84c',
-				lineColor: '#8a7235',
-				secondaryColor: '#1a1a22',
-				tertiaryColor: '#14141a',
-				fontFamily: '"DM Mono", monospace',
-				fontSize: '13px',
-				nodeBorder: '#c9a84c',
-				mainBkg: '#1a1a22',
-				clusterBkg: '#14141a',
-				clusterBorder: '#8a7235',
-				edgeLabelBackground: '#14141a',
-				nodeTextColor: '#f0ece4'
-			}
-		});
-
-		// ============================================
-		// KEYWORD DATA (Schema: definition, category,
-		// explanation, diagram, useCases, relatedTerms)
-		// ============================================
-		const KEYWORDS = [
-			{
-				word: "Behavioral Economics",
-				category: "Economics & Psychology",
-				definition: "心理学の知見を経済学に応用し、人間の非合理的な意思決定パターンを研究する学問分野。",
-				explanation: "従来の経済学は「人間は常に合理的に行動する」という前提に基づいていた。しかし実際には、私たちの判断は様々な認知バイアスに影響される。例えば「アンカリング効果」では、最初に提示された数字がその後の判断基準を大きく左右する。不動産の値札や給与交渉での最初の提示額がその後の交渉全体を支配するのはこのためだ。\n\nダニエル・カーネマンとエイモス・トベルスキーの「プロスペクト理論」は、人は利益を得る喜びより損失の痛みをより強く感じること（損失回避）を実証した。これが「無料お試し期間」のビジネスモデルが有効な理由である。一度手にしたものを失いたくないという心理が働くのだ。\n\nリチャード・セイラーの「ナッジ理論」は、選択の自由を保ちながら人々をより良い方向に導く設計手法として注目されている。カフェテリアでサラダを目の高さに配置するだけで健康的な食事選択が増えるように、環境のデザインが行動を変える。",
-				diagram: `graph LR
+      // ============================================
+      // KEYWORD DATA (Schema: definition, category,
+      // explanation, diagram, useCases, relatedTerms)
+      // ============================================
+      const KEYWORDS = [
+        {
+          word: "Behavioral Economics",
+          category: "Economics & Psychology",
+          definition:
+            "心理学の知見を経済学に応用し、人間の非合理的な意思決定パターンを研究する学問分野。",
+          explanation:
+            "従来の経済学は「人間は常に合理的に行動する」という前提に基づいていた。しかし実際には、私たちの判断は様々な認知バイアスに影響される。例えば「アンカリング効果」では、最初に提示された数字がその後の判断基準を大きく左右する。不動産の値札や給与交渉での最初の提示額がその後の交渉全体を支配するのはこのためだ。\n\nダニエル・カーネマンとエイモス・トベルスキーの「プロスペクト理論」は、人は利益を得る喜びより損失の痛みをより強く感じること（損失回避）を実証した。これが「無料お試し期間」のビジネスモデルが有効な理由である。一度手にしたものを失いたくないという心理が働くのだ。\n\nリチャード・セイラーの「ナッジ理論」は、選択の自由を保ちながら人々をより良い方向に導く設計手法として注目されている。カフェテリアでサラダを目の高さに配置するだけで健康的な食事選択が増えるように、環境のデザインが行動を変える。",
+          diagram: `graph LR
     A[伝統的経済学<br/>合理的経済人] -->|現実との乖離| B[行動経済学]
     B --> C[認知バイアス]
     B --> D[プロスペクト理論]
@@ -821,21 +839,34 @@
     D --> H[損失回避]
     D --> I[フレーミング効果]
     E --> J[選択設計]`,
-				useCases: [
-					"公共政策の設計（年金自動加入制度、臓器提供のオプトアウト方式）",
-					"UXデザインにおけるデフォルト設定の最適化",
-					"マーケティング戦略（価格フレーミング、希少性の演出）",
-					"金融商品の消費者保護と適切な情報開示",
-					"健康行動の促進（食堂のレイアウト設計、運動習慣の形成）"
-				],
-				relatedTerms: ["プロスペクト理論", "ナッジ", "認知バイアス", "ヒューリスティクス", "損失回避", "フレーミング効果", "アンカリング", "限定合理性", "システム1/システム2", "選択アーキテクチャ"]
-			},
-			{
-				word: "Emergence",
-				category: "Complexity Science",
-				definition: "個々の要素の単純な相互作用から、予測不可能な高次の秩序やパターンが自発的に生まれる現象。",
-				explanation: "一匹のアリは極めて単純なルールで行動する。しかし数万匹が集まると、精巧な巣の建設、効率的な食糧運搬ルート、死骸の墓地管理など、驚くべき「知性」が出現する。これが創発だ。個々の部分には存在しない性質が、全体として出現するのである。\n\n創発は自然界のあらゆるスケールで観察される。水分子のH2Oには「濡れている」という性質はないが、無数の水分子が集まると「濡れ」が出現する。ニューロン一つには意識はないが、860億のニューロンのネットワークから意識が生まれる。株式市場では個々のトレーダーの売買が集合的なバブルやクラッシュを生み出す。\n\n創発の重要な特徴は「非還元性」にある。全体を部分に分解して分析するだけでは、創発的性質を理解できない。これは要素還元主義的な科学アプローチへの根本的な問いかけであり、複雑系科学やシステム思考が注目される理由でもある。",
-				diagram: `graph TB
+          useCases: [
+            "公共政策の設計（年金自動加入制度、臓器提供のオプトアウト方式）",
+            "UXデザインにおけるデフォルト設定の最適化",
+            "マーケティング戦略（価格フレーミング、希少性の演出）",
+            "金融商品の消費者保護と適切な情報開示",
+            "健康行動の促進（食堂のレイアウト設計、運動習慣の形成）",
+          ],
+          relatedTerms: [
+            "プロスペクト理論",
+            "ナッジ",
+            "認知バイアス",
+            "ヒューリスティクス",
+            "損失回避",
+            "フレーミング効果",
+            "アンカリング",
+            "限定合理性",
+            "システム1/システム2",
+            "選択アーキテクチャ",
+          ],
+        },
+        {
+          word: "Emergence",
+          category: "Complexity Science",
+          definition:
+            "個々の要素の単純な相互作用から、予測不可能な高次の秩序やパターンが自発的に生まれる現象。",
+          explanation:
+            "一匹のアリは極めて単純なルールで行動する。しかし数万匹が集まると、精巧な巣の建設、効率的な食糧運搬ルート、死骸の墓地管理など、驚くべき「知性」が出現する。これが創発だ。個々の部分には存在しない性質が、全体として出現するのである。\n\n創発は自然界のあらゆるスケールで観察される。水分子のH2Oには「濡れている」という性質はないが、無数の水分子が集まると「濡れ」が出現する。ニューロン一つには意識はないが、860億のニューロンのネットワークから意識が生まれる。株式市場では個々のトレーダーの売買が集合的なバブルやクラッシュを生み出す。\n\n創発の重要な特徴は「非還元性」にある。全体を部分に分解して分析するだけでは、創発的性質を理解できない。これは要素還元主義的な科学アプローチへの根本的な問いかけであり、複雑系科学やシステム思考が注目される理由でもある。",
+          diagram: `graph TB
     subgraph ミクロレベル
     A1[要素A] --- A2[要素B]
     A2 --- A3[要素C]
@@ -848,21 +879,34 @@
     C[創発的秩序<br/>予測不可能な<br/>高次パターン]
     end
     ミクロレベル --> 相互作用 --> マクロレベル`,
-				useCases: [
-					"人工生命・群知能アルゴリズムの設計（粒子群最適化、アリコロニー最適化）",
-					"都市計画における自己組織化パターンの理解と活用",
-					"組織マネジメントでのボトムアップ型イノベーション促進",
-					"AIにおけるマルチエージェントシステムの設計",
-					"生態系の保全と復元における複雑系的アプローチ"
-				],
-				relatedTerms: ["複雑系", "自己組織化", "カオス理論", "システム思考", "還元主義", "ホーリズム", "群知能", "フラクタル", "臨界現象", "非線形ダイナミクス"]
-			},
-			{
-				word: "Semiotics",
-				category: "Linguistics & Culture",
-				definition: "記号（サイン）とその意味作用の仕組みを体系的に研究する学問。言語、画像、行動など、あらゆる意味伝達の構造を解明する。",
-				explanation: "赤い八角形の標識を見れば、文字がなくても「止まれ」と理解する。ブランドのロゴを見れば、品質や世界観を瞬時に読み取る。私たちは常に記号の海の中で生きており、記号論はその海の文法を解読する学問だ。\n\nフェルディナン・ド・ソシュールは、記号を「シニフィアン（記号表現）」と「シニフィエ（記号内容）」に分け、両者の結びつきは恣意的であると論じた。「犬」という音と実際の犬に本質的な繋がりはない。だからこそ言語は文化ごとに異なるのだ。\n\nチャールズ・サンダース・パースはさらに記号を三分類した。「アイコン（類似）」は対象に似ている記号（地図、肖像画）。「インデックス（指標）」は対象と因果関係にある記号（煙は火の指標）。「シンボル（象徴）」は慣習による結びつき（国旗、言語）。\n\n現代では、広告分析、UI/UXデザイン、映画批評、文化研究など、意味の生成と解読が関わるあらゆる分野で記号論的手法が活用されている。",
-				diagram: `graph TD
+          useCases: [
+            "人工生命・群知能アルゴリズムの設計（粒子群最適化、アリコロニー最適化）",
+            "都市計画における自己組織化パターンの理解と活用",
+            "組織マネジメントでのボトムアップ型イノベーション促進",
+            "AIにおけるマルチエージェントシステムの設計",
+            "生態系の保全と復元における複雑系的アプローチ",
+          ],
+          relatedTerms: [
+            "複雑系",
+            "自己組織化",
+            "カオス理論",
+            "システム思考",
+            "還元主義",
+            "ホーリズム",
+            "群知能",
+            "フラクタル",
+            "臨界現象",
+            "非線形ダイナミクス",
+          ],
+        },
+        {
+          word: "Semiotics",
+          category: "Linguistics & Culture",
+          definition:
+            "記号（サイン）とその意味作用の仕組みを体系的に研究する学問。言語、画像、行動など、あらゆる意味伝達の構造を解明する。",
+          explanation:
+            "赤い八角形の標識を見れば、文字がなくても「止まれ」と理解する。ブランドのロゴを見れば、品質や世界観を瞬時に読み取る。私たちは常に記号の海の中で生きており、記号論はその海の文法を解読する学問だ。\n\nフェルディナン・ド・ソシュールは、記号を「シニフィアン（記号表現）」と「シニフィエ（記号内容）」に分け、両者の結びつきは恣意的であると論じた。「犬」という音と実際の犬に本質的な繋がりはない。だからこそ言語は文化ごとに異なるのだ。\n\nチャールズ・サンダース・パースはさらに記号を三分類した。「アイコン（類似）」は対象に似ている記号（地図、肖像画）。「インデックス（指標）」は対象と因果関係にある記号（煙は火の指標）。「シンボル（象徴）」は慣習による結びつき（国旗、言語）。\n\n現代では、広告分析、UI/UXデザイン、映画批評、文化研究など、意味の生成と解読が関わるあらゆる分野で記号論的手法が活用されている。",
+          diagram: `graph TD
     A[記号 Sign] --> B[シニフィアン<br/>記号表現]
     A --> C[シニフィエ<br/>記号内容]
     D[パースの三分類] --> E[アイコン<br/>類似性]
@@ -871,21 +915,34 @@
     E --> H[例: 地図, 肖像画]
     F --> I[例: 煙→火, 足跡]
     G --> J[例: 国旗, 言語]`,
-				useCases: [
-					"ブランドアイデンティティとロゴデザインの意味分析",
-					"広告・メディアの批判的分析（隠されたメッセージの解読）",
-					"UI/UXデザインにおけるアイコンと視覚記号の設計",
-					"映画・文学作品の構造的批評",
-					"異文化コミュニケーションにおける記号体系の差異の理解"
-				],
-				relatedTerms: ["シニフィアン/シニフィエ", "構造主義", "ポスト構造主義", "テクスト分析", "言語学", "コノテーション/デノテーション", "コード", "パース", "ソシュール", "ロラン・バルト"]
-			},
-			{
-				word: "Biomimicry",
-				category: "Science & Engineering",
-				definition: "自然界の生物が38億年の進化を通じて獲得した構造・プロセス・システムを模倣し、人間の技術課題を解決する設計アプローチ。",
-				explanation: "新幹線500系の先頭形状はカワセミのくちばしに学んでいる。カワセミは水中にダイブする際、ほとんど水しぶきを立てない。その流線型を応用することで、トンネル進入時の衝撃波（トンネルドン）を大幅に軽減し、同時に消費電力を15%削減した。\n\n蓮の葉の表面には微細な突起構造があり、水滴が汚れを巻き込みながら転がり落ちる「ロータス効果」を生む。この原理は自己洗浄塗料や撥水コーティングとして製品化されている。ヤモリの足裏にある数百万本のナノ繊維は、ファンデルワールス力を利用して垂直な壁面にも貼り付く。これを模倣した「ヤモリテープ」は宇宙空間での利用が研究されている。\n\nシロアリの塚は外気温が大きく変動する環境でも内部温度を一定に保つ。ジンバブエのイーストゲートセンターはこの換気システムに学び、エアコンなしで快適な室温を維持するビルとして設計された。",
-				diagram: `graph LR
+          useCases: [
+            "ブランドアイデンティティとロゴデザインの意味分析",
+            "広告・メディアの批判的分析（隠されたメッセージの解読）",
+            "UI/UXデザインにおけるアイコンと視覚記号の設計",
+            "映画・文学作品の構造的批評",
+            "異文化コミュニケーションにおける記号体系の差異の理解",
+          ],
+          relatedTerms: [
+            "シニフィアン/シニフィエ",
+            "構造主義",
+            "ポスト構造主義",
+            "テクスト分析",
+            "言語学",
+            "コノテーション/デノテーション",
+            "コード",
+            "パース",
+            "ソシュール",
+            "ロラン・バルト",
+          ],
+        },
+        {
+          word: "Biomimicry",
+          category: "Science & Engineering",
+          definition:
+            "自然界の生物が38億年の進化を通じて獲得した構造・プロセス・システムを模倣し、人間の技術課題を解決する設計アプローチ。",
+          explanation:
+            "新幹線500系の先頭形状はカワセミのくちばしに学んでいる。カワセミは水中にダイブする際、ほとんど水しぶきを立てない。その流線型を応用することで、トンネル進入時の衝撃波（トンネルドン）を大幅に軽減し、同時に消費電力を15%削減した。\n\n蓮の葉の表面には微細な突起構造があり、水滴が汚れを巻き込みながら転がり落ちる「ロータス効果」を生む。この原理は自己洗浄塗料や撥水コーティングとして製品化されている。ヤモリの足裏にある数百万本のナノ繊維は、ファンデルワールス力を利用して垂直な壁面にも貼り付く。これを模倣した「ヤモリテープ」は宇宙空間での利用が研究されている。\n\nシロアリの塚は外気温が大きく変動する環境でも内部温度を一定に保つ。ジンバブエのイーストゲートセンターはこの換気システムに学び、エアコンなしで快適な室温を維持するビルとして設計された。",
+          diagram: `graph LR
     A[自然界の観察] --> B[生物学的原理の抽出]
     B --> C[工学的抽象化]
     C --> D[技術的応用]
@@ -893,21 +950,34 @@
     F[カワセミのくちばし] -.-> G[新幹線500系]
     H[蓮の葉の微細構造] -.-> I[自己洗浄コーティング]
     J[シロアリ塚の換気] -.-> K[パッシブ空調ビル]`,
-				useCases: [
-					"建築設計における省エネルギー型の自然換気・温度制御システム",
-					"新素材開発（クモの糸を模倣した高強度繊維、貝殻構造のセラミックス）",
-					"ロボティクス（昆虫の歩行メカニズム、魚類の遊泳効率の応用）",
-					"都市インフラの設計（生態系に学ぶ水循環・廃棄物処理）",
-					"医療機器の改良（サメ肌を模倣した抗菌表面、蚊の針に学ぶ無痛注射針）"
-				],
-				relatedTerms: ["バイオインスピレーション", "ロータス効果", "構造色", "自己修復材料", "持続可能設計", "進化的最適化", "ジャニン・ベニュス", "ネイチャーテクノロジー", "サステナビリティ", "適応設計"]
-			},
-			{
-				word: "Game Theory",
-				category: "Mathematics & Strategy",
-				definition: "複数の意思決定者（プレイヤー）が相互に影響し合う状況における、合理的な戦略的行動を数学的に分析する理論。",
-				explanation: "二人の容疑者が別々の取調室にいる。互いに黙秘すれば軽い刑で済むが、一方だけが自白すると自白者は釈放され、黙秘者は重罪になる。両者とも自白すると中程度の刑。これが「囚人のジレンマ」であり、個人の合理的選択が全体の最適解と一致しない状況を示す。\n\nジョン・ナッシュが提唱した「ナッシュ均衡」は、すべてのプレイヤーが自分の戦略を変える動機を持たない状態を定義する。渋滞する道路では、ドライバーが別ルートに変えても所要時間が変わらない状態がナッシュ均衡だ。\n\nゲーム理論は国際関係（核抑止の相互確証破壊）、オークション設計（周波数帯の入札制度）、進化生物学（ESS：進化的安定戦略）、さらにはAIのマルチエージェント協調に至るまで、驚くほど広範な応用を持つ。",
-				diagram: `graph TD
+          useCases: [
+            "建築設計における省エネルギー型の自然換気・温度制御システム",
+            "新素材開発（クモの糸を模倣した高強度繊維、貝殻構造のセラミックス）",
+            "ロボティクス（昆虫の歩行メカニズム、魚類の遊泳効率の応用）",
+            "都市インフラの設計（生態系に学ぶ水循環・廃棄物処理）",
+            "医療機器の改良（サメ肌を模倣した抗菌表面、蚊の針に学ぶ無痛注射針）",
+          ],
+          relatedTerms: [
+            "バイオインスピレーション",
+            "ロータス効果",
+            "構造色",
+            "自己修復材料",
+            "持続可能設計",
+            "進化的最適化",
+            "ジャニン・ベニュス",
+            "ネイチャーテクノロジー",
+            "サステナビリティ",
+            "適応設計",
+          ],
+        },
+        {
+          word: "Game Theory",
+          category: "Mathematics & Strategy",
+          definition:
+            "複数の意思決定者（プレイヤー）が相互に影響し合う状況における、合理的な戦略的行動を数学的に分析する理論。",
+          explanation:
+            "二人の容疑者が別々の取調室にいる。互いに黙秘すれば軽い刑で済むが、一方だけが自白すると自白者は釈放され、黙秘者は重罪になる。両者とも自白すると中程度の刑。これが「囚人のジレンマ」であり、個人の合理的選択が全体の最適解と一致しない状況を示す。\n\nジョン・ナッシュが提唱した「ナッシュ均衡」は、すべてのプレイヤーが自分の戦略を変える動機を持たない状態を定義する。渋滞する道路では、ドライバーが別ルートに変えても所要時間が変わらない状態がナッシュ均衡だ。\n\nゲーム理論は国際関係（核抑止の相互確証破壊）、オークション設計（周波数帯の入札制度）、進化生物学（ESS：進化的安定戦略）、さらにはAIのマルチエージェント協調に至るまで、驚くほど広範な応用を持つ。",
+          diagram: `graph TD
     A[ゲーム理論] --> B[非協力ゲーム]
     A --> C[協力ゲーム]
     B --> D[同時手番<br/>囚人のジレンマ]
@@ -919,21 +989,33 @@
     I --> J[経済学・入札]
     I --> K[進化生物学]
     I --> L[AI・交渉]`,
-				useCases: [
-					"オークション設計（政府の周波数帯入札、広告枠オークション）",
-					"ビジネス戦略の分析（価格競争、市場参入の意思決定）",
-					"国際関係と軍事戦略（核抑止、貿易交渉）",
-					"マッチング問題の解決（研修医配属、学校選択制度）",
-					"AIにおけるマルチエージェント協調・対戦の設計"
-				],
-				relatedTerms: ["ナッシュ均衡", "囚人のジレンマ", "パレート最適", "ミニマックス戦略", "ゼロサムゲーム", "メカニズムデザイン", "進化的安定戦略", "シグナリング", "オークション理論", "協力ゲーム"]
-			},
-			{
-				word: "Wabi-Sabi",
-				category: "Aesthetics & Philosophy",
-				definition: "不完全さ、無常、未完成の中に奥深い美を見出す日本の伝統的美学。",
-				explanation: "金継ぎ（きんつぎ）は割れた陶器を金で修復する技法だが、単なる修理ではない。ひび割れを隠すのではなく金で際立たせることで、器に新たな物語と美しさを与える。これが侘び寂びの精神を端的に表している。傷は欠点ではなく、時間と経験が刻んだ勲章なのだ。\n\n千利休が大成した茶の湯は侘び寂びの実践そのものだ。粗末な藁葺きの茶室、左右非対称の花入れ、欠けた茶碗。華美な装飾を排し、簡素さの中に精神的な豊かさを見出す。利休は「花は野にあるように」と教えた。自然のままの姿にこそ美が宿るという哲学だ。\n\n西洋の美学が完璧な均整（シンメトリー）を追求するのに対し、侘び寂びは非対称、粗さ、簡素さを美の条件とする。この価値観は現代のミニマルデザイン、サステナブルなものづくり、デジタルデトックス運動などに新たな視座を提供し続けている。",
-				diagram: `graph TB
+          useCases: [
+            "オークション設計（政府の周波数帯入札、広告枠オークション）",
+            "ビジネス戦略の分析（価格競争、市場参入の意思決定）",
+            "国際関係と軍事戦略（核抑止、貿易交渉）",
+            "マッチング問題の解決（研修医配属、学校選択制度）",
+            "AIにおけるマルチエージェント協調・対戦の設計",
+          ],
+          relatedTerms: [
+            "ナッシュ均衡",
+            "囚人のジレンマ",
+            "パレート最適",
+            "ミニマックス戦略",
+            "ゼロサムゲーム",
+            "メカニズムデザイン",
+            "進化的安定戦略",
+            "シグナリング",
+            "オークション理論",
+            "協力ゲーム",
+          ],
+        },
+        {
+          word: "Wabi-Sabi",
+          category: "Aesthetics & Philosophy",
+          definition: "不完全さ、無常、未完成の中に奥深い美を見出す日本の伝統的美学。",
+          explanation:
+            "金継ぎ（きんつぎ）は割れた陶器を金で修復する技法だが、単なる修理ではない。ひび割れを隠すのではなく金で際立たせることで、器に新たな物語と美しさを与える。これが侘び寂びの精神を端的に表している。傷は欠点ではなく、時間と経験が刻んだ勲章なのだ。\n\n千利休が大成した茶の湯は侘び寂びの実践そのものだ。粗末な藁葺きの茶室、左右非対称の花入れ、欠けた茶碗。華美な装飾を排し、簡素さの中に精神的な豊かさを見出す。利休は「花は野にあるように」と教えた。自然のままの姿にこそ美が宿るという哲学だ。\n\n西洋の美学が完璧な均整（シンメトリー）を追求するのに対し、侘び寂びは非対称、粗さ、簡素さを美の条件とする。この価値観は現代のミニマルデザイン、サステナブルなものづくり、デジタルデトックス運動などに新たな視座を提供し続けている。",
+          diagram: `graph TB
     A[侘び寂び] --> B[侘び Wabi<br/>簡素・質素の中の美]
     A --> C[寂び Sabi<br/>経年変化・枯淡の美]
     B --> D[不完全さの受容]
@@ -945,21 +1027,34 @@
     A --> J[現代への影響]
     J --> K[ミニマルデザイン]
     J --> L[サステナビリティ]`,
-				useCases: [
-					"プロダクトデザインにおける経年美化（エイジング）の設計思想",
-					"建築・インテリアにおける自然素材と不完全性の活用",
-					"ブランディングにおける「完璧でない」ことの価値訴求",
-					"ソフトウェアにおけるグレースフル・デグラデーションの哲学的背景",
-					"メンタルヘルスにおける不完全さの受容とレジリエンス"
-				],
-				relatedTerms: ["金継ぎ", "茶の湯", "千利休", "もののあわれ", "幽玄", "ミニマリズム", "禅", "無常", "詫び", "寂び"]
-			},
-			{
-				word: "Antifragility",
-				category: "Risk & Philosophy",
-				definition: "ストレス、衝撃、変動性、不確実性に晒されることで、むしろ強くなり改善される性質。「壊れにくい（堅牢）」とは本質的に異なる概念。",
-				explanation: "ナシーム・ニコラス・タレブが著書『Antifragile』で提唱した概念は、堅牢性（ロバストネス）の先にある。ガラスのコップはフラジャイル（脆い）で、衝撃で壊れる。鉄のコップはロバスト（堅牢）で、衝撃に耐える。しかし人間の骨は負荷をかけると密度が増す。筋肉はトレーニングで強化される。免疫系は病原体への曝露で強くなる。これがアンティフラジャイルだ。\n\nタレブはこの概念を金融、政治、健康、教育など広範な領域に適用する。過度な安定化（変動性の排除）はシステムをむしろ脆くするという逆説を指摘した。子どもを過保護に育てるとストレス耐性が育たない。森林火災を完全に防ぐと、可燃物が蓄積して大規模火災を招く。\n\n反脆弱性を高める鍵は「小さく失敗し、大きく学ぶ」ことにある。スタートアップの「フェイルファスト」文化や、航空業界の事故調査制度はこの原理の実践例だ。",
-				diagram: `graph LR
+          useCases: [
+            "プロダクトデザインにおける経年美化（エイジング）の設計思想",
+            "建築・インテリアにおける自然素材と不完全性の活用",
+            "ブランディングにおける「完璧でない」ことの価値訴求",
+            "ソフトウェアにおけるグレースフル・デグラデーションの哲学的背景",
+            "メンタルヘルスにおける不完全さの受容とレジリエンス",
+          ],
+          relatedTerms: [
+            "金継ぎ",
+            "茶の湯",
+            "千利休",
+            "もののあわれ",
+            "幽玄",
+            "ミニマリズム",
+            "禅",
+            "無常",
+            "詫び",
+            "寂び",
+          ],
+        },
+        {
+          word: "Antifragility",
+          category: "Risk & Philosophy",
+          definition:
+            "ストレス、衝撃、変動性、不確実性に晒されることで、むしろ強くなり改善される性質。「壊れにくい（堅牢）」とは本質的に異なる概念。",
+          explanation:
+            "ナシーム・ニコラス・タレブが著書『Antifragile』で提唱した概念は、堅牢性（ロバストネス）の先にある。ガラスのコップはフラジャイル（脆い）で、衝撃で壊れる。鉄のコップはロバスト（堅牢）で、衝撃に耐える。しかし人間の骨は負荷をかけると密度が増す。筋肉はトレーニングで強化される。免疫系は病原体への曝露で強くなる。これがアンティフラジャイルだ。\n\nタレブはこの概念を金融、政治、健康、教育など広範な領域に適用する。過度な安定化（変動性の排除）はシステムをむしろ脆くするという逆説を指摘した。子どもを過保護に育てるとストレス耐性が育たない。森林火災を完全に防ぐと、可燃物が蓄積して大規模火災を招く。\n\n反脆弱性を高める鍵は「小さく失敗し、大きく学ぶ」ことにある。スタートアップの「フェイルファスト」文化や、航空業界の事故調査制度はこの原理の実践例だ。",
+          diagram: `graph LR
     A[ストレス・衝撃] --> B{対象の性質}
     B -->|フラジャイル| C[損傷・崩壊]
     B -->|ロバスト| D[変化なし・耐久]
@@ -967,21 +1062,34 @@
     E --> F[例: 筋肉の成長]
     E --> G[例: 免疫系の強化]
     E --> H[例: 進化]`,
-				useCases: [
-					"組織設計における適度なストレスと冗長性の導入",
-					"ポートフォリオ理論（バーベル戦略：超安全資産＋高リスク資産）",
-					"ソフトウェアの回復力設計（カオスエンジニアリング）",
-					"教育における適切な困難さ（望ましい困難 Desirable Difficulties）",
-					"都市計画における多様性と分散型インフラの推進"
-				],
-				relatedTerms: ["ブラックスワン", "ナシーム・タレブ", "レジリエンス", "ロバストネス", "バーベル戦略", "オプション性", "リンディ効果", "カオスエンジニアリング", "冗長性", "リスクマネジメント"]
-			},
-			{
-				word: "Kaizen",
-				category: "Management & Philosophy",
-				definition: "「改善」を意味する日本語で、小さな継続的改善の積み重ねによって大きな成果を実現する経営哲学。",
-				explanation: "1950年代のトヨタ自動車。大野耐一は工場の生産ラインで画期的な仕組みを導入した。作業員の誰もが問題を発見したらラインを止められる「アンドン」方式だ。従来の工場では管理者だけがラインを制御したが、トヨタでは現場の全員が改善の主体となった。\n\n改善の本質は「1%の改善を100日続ければ、元の2.7倍になる」という複利的思考にある。一日で劇的な変化は起きないが、毎日少しずつ工程を見直し、無駄（ムダ）、無理（ムリ）、斑（ムラ）を除去していくことで、やがて圧倒的な差が生まれる。\n\nトヨタ生産方式（TPS）から生まれたこの哲学は、「リーン生産方式」として世界の製造業に広まり、さらにソフトウェア開発（アジャイル、リーンスタートアップ）、医療、教育、個人の習慣形成にまで浸透した。ジェームズ・クリアの『Atomic Habits』もカイゼンの個人版と言える。",
-				diagram: `graph TB
+          useCases: [
+            "組織設計における適度なストレスと冗長性の導入",
+            "ポートフォリオ理論（バーベル戦略：超安全資産＋高リスク資産）",
+            "ソフトウェアの回復力設計（カオスエンジニアリング）",
+            "教育における適切な困難さ（望ましい困難 Desirable Difficulties）",
+            "都市計画における多様性と分散型インフラの推進",
+          ],
+          relatedTerms: [
+            "ブラックスワン",
+            "ナシーム・タレブ",
+            "レジリエンス",
+            "ロバストネス",
+            "バーベル戦略",
+            "オプション性",
+            "リンディ効果",
+            "カオスエンジニアリング",
+            "冗長性",
+            "リスクマネジメント",
+          ],
+        },
+        {
+          word: "Kaizen",
+          category: "Management & Philosophy",
+          definition:
+            "「改善」を意味する日本語で、小さな継続的改善の積み重ねによって大きな成果を実現する経営哲学。",
+          explanation:
+            "1950年代のトヨタ自動車。大野耐一は工場の生産ラインで画期的な仕組みを導入した。作業員の誰もが問題を発見したらラインを止められる「アンドン」方式だ。従来の工場では管理者だけがラインを制御したが、トヨタでは現場の全員が改善の主体となった。\n\n改善の本質は「1%の改善を100日続ければ、元の2.7倍になる」という複利的思考にある。一日で劇的な変化は起きないが、毎日少しずつ工程を見直し、無駄（ムダ）、無理（ムリ）、斑（ムラ）を除去していくことで、やがて圧倒的な差が生まれる。\n\nトヨタ生産方式（TPS）から生まれたこの哲学は、「リーン生産方式」として世界の製造業に広まり、さらにソフトウェア開発（アジャイル、リーンスタートアップ）、医療、教育、個人の習慣形成にまで浸透した。ジェームズ・クリアの『Atomic Habits』もカイゼンの個人版と言える。",
+          diagram: `graph TB
     A[改善 Kaizen] --> B[Plan 計画]
     B --> C[Do 実行]
     C --> D[Check 検証]
@@ -991,21 +1099,34 @@
     F --> G[ムダ 無駄]
     F --> H[ムリ 無理]
     F --> I[ムラ 斑]`,
-				useCases: [
-					"製造業における生産効率と品質の継続的向上",
-					"ソフトウェア開発でのスプリント振り返りとプロセス改善",
-					"医療現場における安全性と効率性の向上（QCサークル）",
-					"個人の習慣形成と生産性向上（小さな改善の積み重ね）",
-					"サービス業における顧客体験の段階的な最適化"
-				],
-				relatedTerms: ["トヨタ生産方式", "リーン生産", "PDCAサイクル", "5S", "アンドン", "ムダ・ムリ・ムラ", "ジャストインタイム", "アジャイル", "継続的改善", "大野耐一"]
-			},
-			{
-				word: "Rhetoric",
-				category: "Communication & Philosophy",
-				definition: "聴衆を説得し、行動を促すための言語表現と論証の技術体系。古代ギリシャで体系化された。",
-				explanation: "アリストテレスは説得の手段を三つに分類した。ロゴス（Logos）は論理と証拠に基づく説得で、データやシロジズム（三段論法）を用いる。パトス（Pathos）は聴衆の感情に訴える手法で、物語やメタファーが武器になる。エトス（Ethos）は話者の人格と信頼性による説得で、専門性や誠実さが基盤となる。\n\nスティーブ・ジョブズの伝説的なiPhoneプレゼンテーションはこの三位一体の完璧な実践だった。製品の革新性をデモで示し（ロゴス）、「電話を再発明する」という物語で聴衆を興奮させ（パトス）、自身のビジョナリーとしての実績で信頼を獲得した（エトス）。\n\n修辞学の技法はプレゼンテーションだけでなく、文章術、交渉術、法廷弁論、政治演説、さらにはUXライティングやコピーライティングにも活きている。説得の科学は2400年を経てなお、コミュニケーションの根幹を成している。",
-				diagram: `graph TD
+          useCases: [
+            "製造業における生産効率と品質の継続的向上",
+            "ソフトウェア開発でのスプリント振り返りとプロセス改善",
+            "医療現場における安全性と効率性の向上（QCサークル）",
+            "個人の習慣形成と生産性向上（小さな改善の積み重ね）",
+            "サービス業における顧客体験の段階的な最適化",
+          ],
+          relatedTerms: [
+            "トヨタ生産方式",
+            "リーン生産",
+            "PDCAサイクル",
+            "5S",
+            "アンドン",
+            "ムダ・ムリ・ムラ",
+            "ジャストインタイム",
+            "アジャイル",
+            "継続的改善",
+            "大野耐一",
+          ],
+        },
+        {
+          word: "Rhetoric",
+          category: "Communication & Philosophy",
+          definition:
+            "聴衆を説得し、行動を促すための言語表現と論証の技術体系。古代ギリシャで体系化された。",
+          explanation:
+            "アリストテレスは説得の手段を三つに分類した。ロゴス（Logos）は論理と証拠に基づく説得で、データやシロジズム（三段論法）を用いる。パトス（Pathos）は聴衆の感情に訴える手法で、物語やメタファーが武器になる。エトス（Ethos）は話者の人格と信頼性による説得で、専門性や誠実さが基盤となる。\n\nスティーブ・ジョブズの伝説的なiPhoneプレゼンテーションはこの三位一体の完璧な実践だった。製品の革新性をデモで示し（ロゴス）、「電話を再発明する」という物語で聴衆を興奮させ（パトス）、自身のビジョナリーとしての実績で信頼を獲得した（エトス）。\n\n修辞学の技法はプレゼンテーションだけでなく、文章術、交渉術、法廷弁論、政治演説、さらにはUXライティングやコピーライティングにも活きている。説得の科学は2400年を経てなお、コミュニケーションの根幹を成している。",
+          diagram: `graph TD
     A[修辞学 Rhetoric] --> B[ロゴス Logos<br/>論理・証拠]
     A --> C[パトス Pathos<br/>感情・共感]
     A --> D[エトス Ethos<br/>信頼・人格]
@@ -1015,21 +1136,34 @@
     C --> H[感情的訴求]
     D --> I[専門性・実績]
     D --> J[誠実さ]`,
-				useCases: [
-					"ビジネスプレゼンテーションとピッチの構築",
-					"コピーライティングと広告メッセージの設計",
-					"政治演説と公共コミュニケーション",
-					"法廷弁論と論理的主張の組み立て",
-					"UXライティングにおける行動喚起（CTA）の最適化"
-				],
-				relatedTerms: ["ロゴス", "パトス", "エトス", "弁論術", "アリストテレス", "メタファー", "三段論法", "ストーリーテリング", "ペルスアジオ", "コピーライティング"]
-			},
-			{
-				word: "Ikigai",
-				category: "Philosophy & Wellness",
-				definition: "「生きがい」。人生に意味と目的を与える、情熱・才能・社会的需要・経済性が交差する概念。",
-				explanation: "沖縄は世界有数の長寿地域「ブルーゾーン」のひとつだ。研究者たちが百寿者に共通する要因を調べたとき、食事や運動以上に際立っていたのが「生きがい」の存在だった。毎朝目覚めたときに「これのために起きる」という目的を持っていることが、心身の健康と深く結びついていた。\n\n生きがいは4つの要素の交差点として視覚化される。「好きなこと（情熱）」「得意なこと（使命）」「世界が必要としていること（天命）」「対価を得られること（職業）」。この4つすべてが重なる領域を見つけることが、深い満足感と持続的なモチベーションにつながる。\n\nただし注意すべきは、生きがいは必ずしも壮大なものである必要はないということだ。庭の手入れ、孫との時間、毎朝の散歩。日本人にとっての生きがいは、日常の中の小さな喜びや役割感に宿ることが多い。西洋で広まった「4つの円のベン図」は生きがいの一側面に過ぎない。",
-				diagram: `graph TD
+          useCases: [
+            "ビジネスプレゼンテーションとピッチの構築",
+            "コピーライティングと広告メッセージの設計",
+            "政治演説と公共コミュニケーション",
+            "法廷弁論と論理的主張の組み立て",
+            "UXライティングにおける行動喚起（CTA）の最適化",
+          ],
+          relatedTerms: [
+            "ロゴス",
+            "パトス",
+            "エトス",
+            "弁論術",
+            "アリストテレス",
+            "メタファー",
+            "三段論法",
+            "ストーリーテリング",
+            "ペルスアジオ",
+            "コピーライティング",
+          ],
+        },
+        {
+          word: "Ikigai",
+          category: "Philosophy & Wellness",
+          definition:
+            "「生きがい」。人生に意味と目的を与える、情熱・才能・社会的需要・経済性が交差する概念。",
+          explanation:
+            "沖縄は世界有数の長寿地域「ブルーゾーン」のひとつだ。研究者たちが百寿者に共通する要因を調べたとき、食事や運動以上に際立っていたのが「生きがい」の存在だった。毎朝目覚めたときに「これのために起きる」という目的を持っていることが、心身の健康と深く結びついていた。\n\n生きがいは4つの要素の交差点として視覚化される。「好きなこと（情熱）」「得意なこと（使命）」「世界が必要としていること（天命）」「対価を得られること（職業）」。この4つすべてが重なる領域を見つけることが、深い満足感と持続的なモチベーションにつながる。\n\nただし注意すべきは、生きがいは必ずしも壮大なものである必要はないということだ。庭の手入れ、孫との時間、毎朝の散歩。日本人にとっての生きがいは、日常の中の小さな喜びや役割感に宿ることが多い。西洋で広まった「4つの円のベン図」は生きがいの一側面に過ぎない。",
+          diagram: `graph TD
     A((生きがい<br/>IKIGAI)) --- B[好きなこと<br/>Passion]
     A --- C[得意なこと<br/>Profession]
     A --- D[世界が必要と<br/>していること<br/>Mission]
@@ -1038,454 +1172,479 @@
     C --- G[使命 × 職業]
     D --- H[天命 × 情熱]
     E --- I[職業 × 天命]`,
-				useCases: [
-					"キャリアデザインとキャリアチェンジの意思決定フレームワーク",
-					"組織における従業員エンゲージメントとパーパス経営",
-					"ウェルビーイング施策とメンタルヘルスプログラム",
-					"退職後のライフプランニングと社会参加の設計",
-					"教育における自己探求プログラムの設計"
-				],
-				relatedTerms: ["ブルーゾーン", "ウェルビーイング", "フロー体験", "自己実現", "パーパス", "マズローの欲求階層", "ポジティブ心理学", "マインドフルネス", "沖縄", "長寿研究"]
-			}
-		];
+          useCases: [
+            "キャリアデザインとキャリアチェンジの意思決定フレームワーク",
+            "組織における従業員エンゲージメントとパーパス経営",
+            "ウェルビーイング施策とメンタルヘルスプログラム",
+            "退職後のライフプランニングと社会参加の設計",
+            "教育における自己探求プログラムの設計",
+          ],
+          relatedTerms: [
+            "ブルーゾーン",
+            "ウェルビーイング",
+            "フロー体験",
+            "自己実現",
+            "パーパス",
+            "マズローの欲求階層",
+            "ポジティブ心理学",
+            "マインドフルネス",
+            "沖縄",
+            "長寿研究",
+          ],
+        },
+      ];
 
-		// ============================================
-		// STATE MANAGEMENT
-		// ============================================
-		let state = 'idle'; // idle | loading | revealing
-		let streamTimer = null;
-		let streamTimers = [];
-		let usedIndices = [];
+      // ============================================
+      // STATE MANAGEMENT
+      // ============================================
+      let state = "idle"; // idle | loading | revealing
+      let streamTimer = null;
+      let streamTimers = [];
+      let usedIndices = [];
 
-		// ============================================
-		// PARTICLE SYSTEM
-		// ============================================
-		const canvas = document.getElementById('particle-canvas');
-		const ctx = canvas.getContext('2d');
-		let particles = [];
-		const PARTICLE_COUNT = 60;
+      // ============================================
+      // PARTICLE SYSTEM
+      // ============================================
+      const canvas = document.getElementById("particle-canvas");
+      const ctx = canvas.getContext("2d");
+      let particles = [];
+      const PARTICLE_COUNT = 60;
 
-		function resizeCanvas() {
-			canvas.width = window.innerWidth;
-			canvas.height = window.innerHeight;
-		}
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
 
-		function createParticle() {
-			return {
-				x: Math.random() * canvas.width,
-				y: Math.random() * canvas.height,
-				vx: (Math.random() - 0.5) * 0.15,
-				vy: -Math.random() * 0.2 - 0.05,
-				size: Math.random() * 1.5 + 0.5,
-				opacity: Math.random() * 0.3 + 0.05,
-				life: Math.random()
-			};
-		}
+      function createParticle() {
+        return {
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.15,
+          vy: -Math.random() * 0.2 - 0.05,
+          size: Math.random() * 1.5 + 0.5,
+          opacity: Math.random() * 0.3 + 0.05,
+          life: Math.random(),
+        };
+      }
 
-		function initParticles() {
-			particles = [];
-			for (let i = 0; i < PARTICLE_COUNT; i++) {
-				particles.push(createParticle());
-			}
-		}
+      function initParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+          particles.push(createParticle());
+        }
+      }
 
-		function updateParticles() {
-			for (let p of particles) {
-				p.x += p.vx;
-				p.y += p.vy;
-				p.life += 0.001;
+      function updateParticles() {
+        for (let p of particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life += 0.001;
 
-				if (p.y < -10 || p.x < -10 || p.x > canvas.width + 10 || p.life > 1) {
-					Object.assign(p, createParticle());
-					p.y = canvas.height + 10;
-					p.life = 0;
-				}
-			}
-		}
+          if (p.y < -10 || p.x < -10 || p.x > canvas.width + 10 || p.life > 1) {
+            Object.assign(p, createParticle());
+            p.y = canvas.height + 10;
+            p.life = 0;
+          }
+        }
+      }
 
-		function drawParticles() {
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			for (let p of particles) {
-				ctx.beginPath();
-				ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-				ctx.fillStyle = `rgba(201, 168, 76, ${p.opacity * (1 - p.life)})`;
-				ctx.fill();
-			}
-		}
+      function drawParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let p of particles) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(201, 168, 76, ${p.opacity * (1 - p.life)})`;
+          ctx.fill();
+        }
+      }
 
-		function animateParticles() {
-			updateParticles();
-			drawParticles();
-			requestAnimationFrame(animateParticles);
-		}
+      function animateParticles() {
+        updateParticles();
+        drawParticles();
+        requestAnimationFrame(animateParticles);
+      }
 
-		resizeCanvas();
-		initParticles();
-		animateParticles();
-		window.addEventListener('resize', () => {
-			resizeCanvas();
-			initParticles();
-		});
+      resizeCanvas();
+      initParticles();
+      animateParticles();
+      window.addEventListener("resize", () => {
+        resizeCanvas();
+        initParticles();
+      });
 
-		// ============================================
-		// CORE LOGIC
-		// ============================================
-		function getRandomKeyword() {
-			if (usedIndices.length >= KEYWORDS.length) {
-				usedIndices = [];
-			}
-			let idx;
-			do {
-				idx = Math.floor(Math.random() * KEYWORDS.length);
-			} while (usedIndices.includes(idx));
-			usedIndices.push(idx);
-			return KEYWORDS[idx];
-		}
+      // ============================================
+      // CORE LOGIC
+      // ============================================
+      function getRandomKeyword() {
+        if (usedIndices.length >= KEYWORDS.length) {
+          usedIndices = [];
+        }
+        let idx;
+        do {
+          idx = Math.floor(Math.random() * KEYWORDS.length);
+        } while (usedIndices.includes(idx));
+        usedIndices.push(idx);
+        return KEYWORDS[idx];
+      }
 
-		function getKeywordByTerm(termName) {
-			return KEYWORDS.find(kw => kw.word === termName) || null;
-		}
+      function getKeywordByTerm(termName) {
+        return KEYWORDS.find((kw) => kw.word === termName) || null;
+      }
 
-		function discover() {
-			if (state !== 'idle') return;
-			state = 'loading';
+      function discover() {
+        if (state !== "idle") return;
+        state = "loading";
 
-			const keyword = getRandomKeyword();
-			const stage = document.getElementById('stage');
-			const reveal = document.getElementById('reveal');
+        const keyword = getRandomKeyword();
+        const stage = document.getElementById("stage");
+        const reveal = document.getElementById("reveal");
 
-			// Fade out stage
-			stage.classList.add('hidden');
+        // Fade out stage
+        stage.classList.add("hidden");
 
-			// Prepare content during stage fade-out
-			setTimeout(() => {
-				document.getElementById('revealCategory').textContent = keyword.category;
-				document.getElementById('revealKeyword').textContent = keyword.word;
-				document.getElementById('definitionText').innerHTML = '';
-				document.getElementById('explanationText').innerHTML = '';
-				document.getElementById('diagramContent').innerHTML = '';
-				document.getElementById('useCasesList').innerHTML = '';
-				document.getElementById('termsGrid').innerHTML = '';
-				document.getElementById('revealCta').classList.remove('visible');
+        // Prepare content during stage fade-out
+        setTimeout(() => {
+          document.getElementById("revealCategory").textContent = keyword.category;
+          document.getElementById("revealKeyword").textContent = keyword.word;
+          document.getElementById("definitionText").innerHTML = "";
+          document.getElementById("explanationText").innerHTML = "";
+          document.getElementById("diagramContent").innerHTML = "";
+          document.getElementById("useCasesList").innerHTML = "";
+          document.getElementById("termsGrid").innerHTML = "";
+          document.getElementById("revealCta").classList.remove("visible");
 
-				// Hide all content sections initially
-				document.querySelectorAll('.content-section').forEach(s => s.classList.remove('visible'));
+          // Hide all content sections initially
+          document
+            .querySelectorAll(".content-section")
+            .forEach((s) => s.classList.remove("visible"));
 
-				// Scroll reveal to top
-				reveal.scrollTop = 0;
-			}, 200);
+          // Scroll reveal to top
+          reveal.scrollTop = 0;
+        }, 200);
 
-			// Fade in reveal and start streaming
-			setTimeout(() => {
-				reveal.classList.add('visible');
-				state = 'revealing';
+        // Fade in reveal and start streaming
+        setTimeout(() => {
+          reveal.classList.add("visible");
+          state = "revealing";
 
-				// Start streaming content sections
-				setTimeout(() => {
-					streamAllSections(keyword);
-				}, 400);
-			}, 600);
-		}
+          // Start streaming content sections
+          setTimeout(() => {
+            streamAllSections(keyword);
+          }, 400);
+        }, 600);
+      }
 
-		function discoverByTerm(termName) {
-			if (state !== 'idle' && state !== 'revealing') return;
+      function discoverByTerm(termName) {
+        if (state !== "idle" && state !== "revealing") return;
 
-			const keyword = getKeywordByTerm(termName);
-			if (!keyword) {
-				console.warn('Keyword not found:', termName);
-				return;
-			}
+        const keyword = getKeywordByTerm(termName);
+        if (!keyword) {
+          console.warn("Keyword not found:", termName);
+          return;
+        }
 
-			state = 'loading';
+        state = "loading";
 
-			const stage = document.getElementById('stage');
-			const reveal = document.getElementById('reveal');
+        const stage = document.getElementById("stage");
+        const reveal = document.getElementById("reveal");
 
-			// Fade out current reveal (if visible)
-			reveal.classList.remove('visible');
+        // Fade out current reveal (if visible)
+        reveal.classList.remove("visible");
 
-			// Fade out stage
-			stage.classList.add('hidden');
+        // Fade out stage
+        stage.classList.add("hidden");
 
-			// Prepare content during fade-out
-			setTimeout(() => {
-				document.getElementById('revealCategory').textContent = keyword.category;
-				document.getElementById('revealKeyword').textContent = keyword.word;
-				document.getElementById('definitionText').innerHTML = '';
-				document.getElementById('explanationText').innerHTML = '';
-				document.getElementById('diagramContent').innerHTML = '';
-				document.getElementById('useCasesList').innerHTML = '';
-				document.getElementById('termsGrid').innerHTML = '';
-				document.getElementById('revealCta').classList.remove('visible');
+        // Prepare content during fade-out
+        setTimeout(() => {
+          document.getElementById("revealCategory").textContent = keyword.category;
+          document.getElementById("revealKeyword").textContent = keyword.word;
+          document.getElementById("definitionText").innerHTML = "";
+          document.getElementById("explanationText").innerHTML = "";
+          document.getElementById("diagramContent").innerHTML = "";
+          document.getElementById("useCasesList").innerHTML = "";
+          document.getElementById("termsGrid").innerHTML = "";
+          document.getElementById("revealCta").classList.remove("visible");
 
-				// Hide all content sections initially
-				document.querySelectorAll('.content-section').forEach(s => s.classList.remove('visible'));
+          // Hide all content sections initially
+          document
+            .querySelectorAll(".content-section")
+            .forEach((s) => s.classList.remove("visible"));
 
-				// Scroll reveal to top
-				reveal.scrollTop = 0;
-			}, 200);
+          // Scroll reveal to top
+          reveal.scrollTop = 0;
+        }, 200);
 
-			// Fade in reveal and start streaming
-			setTimeout(() => {
-				reveal.classList.add('visible');
-				state = 'revealing';
+        // Fade in reveal and start streaming
+        setTimeout(() => {
+          reveal.classList.add("visible");
+          state = "revealing";
 
-				// Start streaming content sections
-				setTimeout(() => {
-					streamAllSections(keyword);
-				}, 400);
-			}, 600);
-		}
+          // Start streaming content sections
+          setTimeout(() => {
+            streamAllSections(keyword);
+          }, 400);
+        }, 600);
+      }
 
-		// ============================================
-		// SEQUENTIAL SECTION STREAMING
-		// ============================================
-		function streamAllSections(keyword) {
-			const revealEl = document.getElementById('reveal');
+      // ============================================
+      // SEQUENTIAL SECTION STREAMING
+      // ============================================
+      function streamAllSections(keyword) {
+        const revealEl = document.getElementById("reveal");
 
-			// Section 1: Definition (stream text)
-			streamText(keyword.definition, 'definitionText', 'sectionDefinition', 28, () => {
-				scrollSmoothlyTo(revealEl, document.getElementById('sectionExplanation'));
+        // Section 1: Definition (stream text)
+        streamText(keyword.definition, "definitionText", "sectionDefinition", 28, () => {
+          scrollSmoothlyTo(revealEl, document.getElementById("sectionExplanation"));
 
-				// Section 2: Explanation (stream text)
-				setTimeout(() => {
-					streamText(keyword.explanation, 'explanationText', 'sectionExplanation', 18, () => {
-						scrollSmoothlyTo(revealEl, document.getElementById('sectionDiagram'));
+          // Section 2: Explanation (stream text)
+          setTimeout(() => {
+            streamText(keyword.explanation, "explanationText", "sectionExplanation", 18, () => {
+              scrollSmoothlyTo(revealEl, document.getElementById("sectionDiagram"));
 
-						// Section 3: Diagram (render mermaid)
-						setTimeout(() => {
-							if (keyword.diagram) {
-								renderDiagram(keyword.diagram, 'sectionDiagram', () => {
-									scrollSmoothlyTo(revealEl, document.getElementById('sectionUseCases'));
+              // Section 3: Diagram (render mermaid)
+              setTimeout(() => {
+                if (keyword.diagram) {
+                  renderDiagram(keyword.diagram, "sectionDiagram", () => {
+                    scrollSmoothlyTo(revealEl, document.getElementById("sectionUseCases"));
 
-									// Section 4: Use Cases (reveal one by one)
-									setTimeout(() => {
-										revealUseCases(keyword.useCases, () => {
-											scrollSmoothlyTo(revealEl, document.getElementById('sectionRelatedTerms'));
+                    // Section 4: Use Cases (reveal one by one)
+                    setTimeout(() => {
+                      revealUseCases(keyword.useCases, () => {
+                        scrollSmoothlyTo(revealEl, document.getElementById("sectionRelatedTerms"));
 
-											// Section 5: Related Terms (reveal as tags)
-											setTimeout(() => {
-												revealRelatedTerms(keyword.relatedTerms, () => {
-													// Show CTA
-													setTimeout(() => {
-														document.getElementById('revealCta').classList.add('visible');
-														scrollSmoothlyTo(revealEl, document.getElementById('revealCta'));
-													}, 400);
-												});
-											}, 300);
-										});
-									}, 300);
-								});
-							} else {
-								// Skip diagram, go to use cases
-								document.getElementById('sectionDiagram').style.display = 'none';
-								scrollSmoothlyTo(revealEl, document.getElementById('sectionUseCases'));
-								setTimeout(() => {
-									revealUseCases(keyword.useCases, () => {
-										scrollSmoothlyTo(revealEl, document.getElementById('sectionRelatedTerms'));
-										setTimeout(() => {
-											revealRelatedTerms(keyword.relatedTerms, () => {
-												setTimeout(() => {
-													document.getElementById('revealCta').classList.add('visible');
-													scrollSmoothlyTo(revealEl, document.getElementById('revealCta'));
-												}, 400);
-											});
-										}, 300);
-									});
-								}, 300);
-							}
-						}, 400);
-					});
-				}, 300);
-			});
-		}
+                        // Section 5: Related Terms (reveal as tags)
+                        setTimeout(() => {
+                          revealRelatedTerms(keyword.relatedTerms, () => {
+                            // Show CTA
+                            setTimeout(() => {
+                              document.getElementById("revealCta").classList.add("visible");
+                              scrollSmoothlyTo(revealEl, document.getElementById("revealCta"));
+                            }, 400);
+                          });
+                        }, 300);
+                      });
+                    }, 300);
+                  });
+                } else {
+                  // Skip diagram, go to use cases
+                  document.getElementById("sectionDiagram").style.display = "none";
+                  scrollSmoothlyTo(revealEl, document.getElementById("sectionUseCases"));
+                  setTimeout(() => {
+                    revealUseCases(keyword.useCases, () => {
+                      scrollSmoothlyTo(revealEl, document.getElementById("sectionRelatedTerms"));
+                      setTimeout(() => {
+                        revealRelatedTerms(keyword.relatedTerms, () => {
+                          setTimeout(() => {
+                            document.getElementById("revealCta").classList.add("visible");
+                            scrollSmoothlyTo(revealEl, document.getElementById("revealCta"));
+                          }, 400);
+                        });
+                      }, 300);
+                    });
+                  }, 300);
+                }
+              }, 400);
+            });
+          }, 300);
+        });
+      }
 
-		function scrollSmoothlyTo(container, target) {
-			if (!target) return;
-			const targetTop = target.offsetTop - container.offsetTop - 40;
-			container.scrollTo({top: targetTop, behavior: 'smooth'});
-		}
+      function scrollSmoothlyTo(container, target) {
+        if (!target) return;
+        const targetTop = target.offsetTop - container.offsetTop - 40;
+        container.scrollTo({ top: targetTop, behavior: "smooth" });
+      }
 
-		function streamText(text, targetId, sectionId, charDelay, onComplete) {
-			const el = document.getElementById(targetId);
-			const section = document.getElementById(sectionId);
-			section.classList.add('visible');
+      function streamText(text, targetId, sectionId, charDelay, onComplete) {
+        const el = document.getElementById(targetId);
+        const section = document.getElementById(sectionId);
+        section.classList.add("visible");
 
-			let index = 0;
-			el.innerHTML = '<span class="cursor"></span>';
+        let index = 0;
+        el.innerHTML = '<span class="cursor"></span>';
 
-			function typeNext() {
-				if (index < text.length) {
-					const char = text[index];
-					const cursor = el.querySelector('.cursor');
-					if (char === '\n') {
-						const br = document.createElement('br');
-						el.insertBefore(br, cursor);
-					} else {
-						const textNode = document.createTextNode(char);
-						el.insertBefore(textNode, cursor);
-					}
-					index++;
+        function typeNext() {
+          if (index < text.length) {
+            const char = text[index];
+            const cursor = el.querySelector(".cursor");
+            if (char === "\n") {
+              const br = document.createElement("br");
+              el.insertBefore(br, cursor);
+            } else {
+              const textNode = document.createTextNode(char);
+              el.insertBefore(textNode, cursor);
+            }
+            index++;
 
-					const isPunctuation = '。、！？—「」\n'.includes(char);
-					const delay = isPunctuation ? 160 : (charDelay + Math.random() * 20);
+            const isPunctuation = "。、！？—「」\n".includes(char);
+            const delay = isPunctuation ? 160 : charDelay + Math.random() * 20;
 
-					const t = setTimeout(typeNext, delay);
-					streamTimers.push(t);
-				} else {
-					// Done streaming
-					const cursor = el.querySelector('.cursor');
-					if (cursor) {
-						const t = setTimeout(() => {
-							cursor.remove();
-							if (onComplete) onComplete();
-						}, 400);
-						streamTimers.push(t);
-					}
-				}
-			}
+            const t = setTimeout(typeNext, delay);
+            streamTimers.push(t);
+          } else {
+            // Done streaming
+            const cursor = el.querySelector(".cursor");
+            if (cursor) {
+              const t = setTimeout(() => {
+                cursor.remove();
+                if (onComplete) onComplete();
+              }, 400);
+              streamTimers.push(t);
+            }
+          }
+        }
 
-			const t = setTimeout(typeNext, 300);
-			streamTimers.push(t);
-		}
+        const t = setTimeout(typeNext, 300);
+        streamTimers.push(t);
+      }
 
-		function renderDiagram(diagramCode, sectionId, onComplete) {
-			const section = document.getElementById(sectionId);
-			section.style.display = '';
-			section.classList.add('visible');
+      function renderDiagram(diagramCode, sectionId, onComplete) {
+        const section = document.getElementById(sectionId);
+        section.style.display = "";
+        section.classList.add("visible");
 
-			const diagramEl = document.getElementById('diagramContent');
-			const diagramId = 'mermaid-' + Date.now();
-			diagramEl.innerHTML = '';
-			diagramEl.removeAttribute('data-processed');
+        const diagramEl = document.getElementById("diagramContent");
+        const diagramId = "mermaid-" + Date.now();
+        diagramEl.innerHTML = "";
+        diagramEl.removeAttribute("data-processed");
 
-			try {
-				mermaid.render(diagramId, diagramCode).then(({svg}) => {
-					diagramEl.innerHTML = svg;
-					const t = setTimeout(() => {
-						if (onComplete) onComplete();
-					}, 600);
-					streamTimers.push(t);
-				}).catch(() => {
-					// Fallback: show code as pre
-					diagramEl.innerHTML = '<pre style="color: var(--text-secondary); font-size: 0.8rem;">' + diagramCode + '</pre>';
-					const t = setTimeout(() => {
-						if (onComplete) onComplete();
-					}, 400);
-					streamTimers.push(t);
-				});
-			} catch (e) {
-				diagramEl.innerHTML = '<pre style="color: var(--text-secondary); font-size: 0.8rem;">' + diagramCode + '</pre>';
-				const t = setTimeout(() => {
-					if (onComplete) onComplete();
-				}, 400);
-				streamTimers.push(t);
-			}
-		}
+        try {
+          mermaid
+            .render(diagramId, diagramCode)
+            .then(({ svg }) => {
+              diagramEl.innerHTML = svg;
+              const t = setTimeout(() => {
+                if (onComplete) onComplete();
+              }, 600);
+              streamTimers.push(t);
+            })
+            .catch(() => {
+              // Fallback: show code as pre
+              diagramEl.innerHTML =
+                '<pre style="color: var(--text-secondary); font-size: 0.8rem;">' +
+                diagramCode +
+                "</pre>";
+              const t = setTimeout(() => {
+                if (onComplete) onComplete();
+              }, 400);
+              streamTimers.push(t);
+            });
+        } catch (e) {
+          diagramEl.innerHTML =
+            '<pre style="color: var(--text-secondary); font-size: 0.8rem;">' +
+            diagramCode +
+            "</pre>";
+          const t = setTimeout(() => {
+            if (onComplete) onComplete();
+          }, 400);
+          streamTimers.push(t);
+        }
+      }
 
-		function revealUseCases(useCases, onComplete) {
-			const section = document.getElementById('sectionUseCases');
-			section.classList.add('visible');
-			const list = document.getElementById('useCasesList');
-			list.innerHTML = '';
+      function revealUseCases(useCases, onComplete) {
+        const section = document.getElementById("sectionUseCases");
+        section.classList.add("visible");
+        const list = document.getElementById("useCasesList");
+        list.innerHTML = "";
 
-			let i = 0;
-			function showNext() {
-				if (i < useCases.length) {
-					const li = document.createElement('li');
-					li.textContent = useCases[i];
-					li.style.opacity = '0';
-					li.style.transform = 'translateX(-10px)';
-					li.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-					list.appendChild(li);
+        let i = 0;
+        function showNext() {
+          if (i < useCases.length) {
+            const li = document.createElement("li");
+            li.textContent = useCases[i];
+            li.style.opacity = "0";
+            li.style.transform = "translateX(-10px)";
+            li.style.transition = "opacity 0.4s ease, transform 0.4s ease";
+            list.appendChild(li);
 
-					requestAnimationFrame(() => {
-						li.style.opacity = '1';
-						li.style.transform = 'translateX(0)';
-					});
+            requestAnimationFrame(() => {
+              li.style.opacity = "1";
+              li.style.transform = "translateX(0)";
+            });
 
-					i++;
-					const t = setTimeout(showNext, 200);
-					streamTimers.push(t);
-				} else {
-					const t = setTimeout(() => {
-						if (onComplete) onComplete();
-					}, 300);
-					streamTimers.push(t);
-				}
-			}
+            i++;
+            const t = setTimeout(showNext, 200);
+            streamTimers.push(t);
+          } else {
+            const t = setTimeout(() => {
+              if (onComplete) onComplete();
+            }, 300);
+            streamTimers.push(t);
+          }
+        }
 
-			const t = setTimeout(showNext, 200);
-			streamTimers.push(t);
-		}
+        const t = setTimeout(showNext, 200);
+        streamTimers.push(t);
+      }
 
-		function revealRelatedTerms(terms, onComplete) {
-			const section = document.getElementById('sectionRelatedTerms');
-			section.classList.add('visible');
-			const grid = document.getElementById('termsGrid');
-			grid.innerHTML = '';
+      function revealRelatedTerms(terms, onComplete) {
+        const section = document.getElementById("sectionRelatedTerms");
+        section.classList.add("visible");
+        const grid = document.getElementById("termsGrid");
+        grid.innerHTML = "";
 
-			let i = 0;
-			function showNext() {
-				if (i < terms.length) {
-					const tag = document.createElement('span');
-					tag.className = 'term-tag';
-					tag.textContent = terms[i];
-					tag.style.cursor = 'pointer';
-					tag.onclick = () => discoverByTerm(terms[i]);
-					tag.style.opacity = '0';
-					tag.style.transform = 'scale(0.8)';
-					tag.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-					grid.appendChild(tag);
+        let i = 0;
+        function showNext() {
+          if (i < terms.length) {
+            const tag = document.createElement("span");
+            tag.className = "term-tag";
+            tag.textContent = terms[i];
+            tag.style.cursor = "pointer";
+            tag.onclick = () => discoverByTerm(terms[i]);
+            tag.style.opacity = "0";
+            tag.style.transform = "scale(0.8)";
+            tag.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+            grid.appendChild(tag);
 
-					requestAnimationFrame(() => {
-						tag.style.opacity = '1';
-						tag.style.transform = 'scale(1)';
-					});
+            requestAnimationFrame(() => {
+              tag.style.opacity = "1";
+              tag.style.transform = "scale(1)";
+            });
 
-					i++;
-					const t = setTimeout(showNext, 100);
-					streamTimers.push(t);
-				} else {
-					const t = setTimeout(() => {
-						if (onComplete) onComplete();
-					}, 300);
-					streamTimers.push(t);
-				}
-			}
+            i++;
+            const t = setTimeout(showNext, 100);
+            streamTimers.push(t);
+          } else {
+            const t = setTimeout(() => {
+              if (onComplete) onComplete();
+            }, 300);
+            streamTimers.push(t);
+          }
+        }
 
-			const t = setTimeout(showNext, 200);
-			streamTimers.push(t);
-		}
+        const t = setTimeout(showNext, 200);
+        streamTimers.push(t);
+      }
 
-		function reset() {
-			// Clear all streaming timers
-			streamTimers.forEach(t => clearTimeout(t));
-			streamTimers = [];
-			if (streamTimer) {
-				clearTimeout(streamTimer);
-				streamTimer = null;
-			}
+      function reset() {
+        // Clear all streaming timers
+        streamTimers.forEach((t) => clearTimeout(t));
+        streamTimers = [];
+        if (streamTimer) {
+          clearTimeout(streamTimer);
+          streamTimer = null;
+        }
 
-			const reveal = document.getElementById('reveal');
-			const stage = document.getElementById('stage');
+        const reveal = document.getElementById("reveal");
+        const stage = document.getElementById("stage");
 
-			// Fade out reveal
-			reveal.classList.remove('visible');
+        // Fade out reveal
+        reveal.classList.remove("visible");
 
-			// Clean up sections
-			setTimeout(() => {
-				document.getElementById('revealCta').classList.remove('visible');
-				document.querySelectorAll('.content-section').forEach(s => s.classList.remove('visible'));
-			}, 300);
+        // Clean up sections
+        setTimeout(() => {
+          document.getElementById("revealCta").classList.remove("visible");
+          document
+            .querySelectorAll(".content-section")
+            .forEach((s) => s.classList.remove("visible"));
+        }, 300);
 
-			// Immediately trigger next discovery
-			setTimeout(() => {
-				state = 'idle';  // Set to idle so discover() can run
-				discover();      // Immediately start next discovery
-			}, 600);
-		}
-	</script>
-</body>
-
+        // Immediately trigger next discovery
+        setTimeout(() => {
+          state = "idle"; // Set to idle so discover() can run
+          discover(); // Immediately start next discovery
+        }, 600);
+      }
+    </script>
+  </body>
 </html>

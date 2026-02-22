@@ -43,13 +43,13 @@ Enliminalは、ユーザーが予期しない専門的なキーワードと出�
 
 ## 技術スタック
 
-| 技術 | 選定理由 |
-|------|---------|
-| **Astro** | 静的コンテンツが多い本アプリに最適。Lighthouse 100点が現実的。必要な箇所のみReact islandsで動的UIを実装 |
-| **Neon Postgres** | Supabaseより安定。PostgreSQL serverless。Vercel統合が簡単。従量課金で初期コストほぼゼロ |
-| **Supabase Auth** | 認証機能のみ使用。実績あり、実装が簡単。OAuth連携もサポート |
-| **Stripe** | 課金UIをすべてStripe側でホスト（Checkout + Billing Portal）。実装が最小限で済む |
-| **Vercel** | Astroの完全サポート、エッジファンクション、自動デプロイ。無料枠が充実 |
+| 技術              | 選定理由                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------------- |
+| **Astro**         | 静的コンテンツが多い本アプリに最適。Lighthouse 100点が現実的。必要な箇所のみReact islandsで動的UIを実装 |
+| **Neon Postgres** | Supabaseより安定。PostgreSQL serverless。Vercel統合が簡単。従量課金で初期コストほぼゼロ                 |
+| **Supabase Auth** | 認証機能のみ使用。実績あり、実装が簡単。OAuth連携もサポート                                             |
+| **Stripe**        | 課金UIをすべてStripe側でホスト（Checkout + Billing Portal）。実装が最小限で済む                         |
+| **Vercel**        | Astroの完全サポート、エッジファンクション、自動デプロイ。無料枠が充実                                   |
 
 ## ディレクトリ構成
 
@@ -149,14 +149,14 @@ http://localhost:4421 でアプリケーションが起動します。
 
 ## スクリプト
 
-| コマンド | 説明 |
-|---------|------|
-| `bun run dev` | 開発サーバー起動 (http://localhost:4421) |
-| `bun run build` | 本番ビルド |
-| `bun run preview` | 本番ビルドのプレビュー |
-| `bun test` | ユニットテスト (Vitest) |
-| `bun run lhci` | ビルド後 Lighthouse CI 実行（`/` 対象） |
-| `bun run lint` | ESLint |
+| コマンド          | 説明                                     |
+| ----------------- | ---------------------------------------- |
+| `bun run dev`     | 開発サーバー起動 (http://localhost:4421) |
+| `bun run build`   | 本番ビルド                               |
+| `bun run preview` | 本番ビルドのプレビュー                   |
+| `bun test`        | ユニットテスト (Vitest)                  |
+| `bun run lhci`    | ビルド後 Lighthouse CI 実行（`/` 対象）  |
+| `bun run lint`    | ESLint                                   |
 
 ## テスト
 

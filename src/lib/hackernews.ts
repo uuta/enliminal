@@ -1,8 +1,7 @@
 import type { Keyword } from "@/lib/types";
 
 const HN_TOP = "https://hacker-news.firebaseio.com/v0/topstories.json";
-const HN_ITEM = (id: number) =>
-  `https://hacker-news.firebaseio.com/v0/item/${id}.json`;
+const HN_ITEM = (id: number) => `https://hacker-news.firebaseio.com/v0/item/${id}.json`;
 
 interface Response {
   title: string;

@@ -1,18 +1,17 @@
-import type { APIRoute } from 'astro';
+import type { APIRoute } from "astro";
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
-import { fetchRandomKeyword, fetchKeywordByTitle } from '@/lib/wikipedia';
-import { fetchRandomHNKeyword } from '@/lib/hackernews';
+import { fetchRandomKeyword, fetchKeywordByTitle } from "@/lib/wikipedia";
+import { fetchRandomHNKeyword } from "@/lib/hackernews";
 
 const ai = new GoogleGenAI({ apiKey: import.meta.env.GEMINI_API_KEY });
 
-const EXTRACT_SYSTEM = "Extract a single precise English keyword or short concept phrase (max 3 words) suitable for a Wikipedia search. Return ONLY the keyword — no punctuation, no explanation.";
+const EXTRACT_SYSTEM =
+  "Extract a single precise English keyword or short concept phrase (max 3 words) suitable for a Wikipedia search. Return ONLY the keyword — no punctuation, no explanation.";
 
 export const GET: APIRoute = async ({ url }) => {
-  const sources = url.searchParams.get('sources')?.split(',') ?? ['wikipedia'];
+  const sources = url.searchParams.get("sources")?.split(",") ?? ["wikipedia"];
   const pick = sources[Math.floor(Math.random() * sources.length)];
-  const raw = pick === 'hackernews'
-    ? await fetchRandomHNKeyword()
-    : await fetchRandomKeyword();
+  const raw = pick === "hackernews" ? await fetchRandomHNKeyword() : await fetchRandomKeyword();
 
   const res = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
@@ -27,11 +26,11 @@ export const GET: APIRoute = async ({ url }) => {
   try {
     const keyword = await fetchKeywordByTitle(clean);
     return new Response(JSON.stringify(keyword), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   } catch {
     return new Response(JSON.stringify(raw), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     });
   }
 };

@@ -1,6 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef } from "react";
 import { MermaidDiagram } from "@/islands/MermaidDiagram";
-import { KeywordSkeleton, ContentSkeleton, PapersSkeleton, VideosSkeleton } from '@/islands/DiscoverSkeleton';
+import {
+  KeywordSkeleton,
+  ContentSkeleton,
+  PapersSkeleton,
+  VideosSkeleton,
+} from "@/islands/DiscoverSkeleton";
 import type { KeywordData } from "@/lib/generateContent";
 import { fetchKeywordByTitle } from "@/lib/wikipedia";
 import { fetchRandomKeyword, generateContent, fetchPapers, fetchVideos } from "@/lib/client";
@@ -51,7 +56,7 @@ export function DiscoverContent({ sources }: Props) {
     loadVideos(kw.title).catch(console.error);
   }
 
-  if (!started.current && typeof window !== 'undefined') {
+  if (!started.current && typeof window !== "undefined") {
     started.current = true;
     runDiscovery().catch(console.error);
   }
@@ -132,9 +137,9 @@ export function DiscoverContent({ sources }: Props) {
                     {p.title}
                   </a>
                   <span>
-                    {p.authors.slice(0, 2).join(', ')}
-                    {p.authors.length > 2 ? ' et al.' : ''}
-                    {p.year ? ` (${p.year})` : ''}
+                    {p.authors.slice(0, 2).join(", ")}
+                    {p.authors.length > 2 ? " et al." : ""}
+                    {p.year ? ` (${p.year})` : ""}
                   </span>
                 </li>
               ))}
@@ -166,7 +171,7 @@ export function DiscoverContent({ sources }: Props) {
             {selectedVideoUrl && (
               <div className="video-embed">
                 <iframe
-                  src={`https://www.youtube.com/embed/${new URL(selectedVideoUrl).searchParams.get('v')}?autoplay=1`}
+                  src={`https://www.youtube.com/embed/${new URL(selectedVideoUrl).searchParams.get("v")}?autoplay=1`}
                   allow="autoplay; encrypted-media"
                   allowFullScreen
                 />

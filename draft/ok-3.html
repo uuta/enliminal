@@ -1,717 +1,822 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LINZ // TERMINAL INTERFACE</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-    --bg-base: #0a0a0f;
-    --bg-surface: #0c0c10;
-    --bg-terminal: #050508;
-    --neon-green: #00ff88;
-    --neon-green-dim: rgba(0, 255, 136, 0.15);
-    --neon-green-glow: rgba(0, 255, 136, 0.4);
-    --neon-red: #ff3355;
-    --neon-red-dim: rgba(255, 51, 85, 0.15);
-    --neon-amber: #ffd700;
-    --text-gray: #666;
-    --text-light: #999;
-    --text-body: #ccc;
-    --border-subtle: rgba(0, 255, 136, 0.08);
-    --border-active: rgba(0, 255, 136, 0.2);
-    --scanline-opacity: 0.03;
-  }
-
-  html { font-size: 16px; }
-
-  body {
-    background-color: var(--bg-base);
-    color: var(--text-body);
-    font-family: var(--font-mono);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1rem;
-    overflow-x: hidden;
-    position: relative;
-  }
-
-  /* -- SCANLINE OVERLAY -- */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 255, 136, var(--scanline-opacity)) 2px,
-      rgba(0, 255, 136, var(--scanline-opacity)) 4px
-    );
-    pointer-events: none;
-    z-index: 9999;
-  }
-
-  /* -- CRT VIGNETTE -- */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(
-      ellipse at center,
-      transparent 50%,
-      rgba(0, 0, 0, 0.6) 100%
-    );
-    pointer-events: none;
-    z-index: 9998;
-  }
-
-  /* -- AMBIENT GLOW -- */
-  .ambient {
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse at 30% 70%, rgba(0, 255, 136, 0.03) 0%, transparent 50%),
-      radial-gradient(ellipse at 70% 30%, rgba(0, 180, 100, 0.02) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* -- MAIN CONTAINER -- */
-  .terminal-container {
-    width: 100%;
-    max-width: 640px;
-    position: relative;
-    z-index: 1;
-    animation: bootUp 0.8s ease both;
-  }
-
-  @keyframes bootUp {
-    0% { opacity: 0; transform: translateY(10px); filter: blur(2px); }
-    60% { opacity: 1; filter: blur(0); }
-    100% { transform: translateY(0); }
-  }
-
-  /* -- TERMINAL WINDOW CHROME -- */
-  .terminal-window {
-    background: var(--bg-terminal);
-    border: 1px solid var(--border-active);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow:
-      0 0 30px rgba(0, 255, 136, 0.05),
-      0 20px 60px rgba(0, 0, 0, 0.5);
-  }
-
-  /* -- TITLE BAR -- */
-  .title-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    background: #0e0e14;
-    border-bottom: 1px solid var(--border-subtle);
-    position: relative;
-  }
-
-  .traffic-lights {
-    display: flex;
-    gap: 6px;
-  }
-
-  .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-  }
-  .dot.red { background: #ff5f57; }
-  .dot.yellow { background: #ffbd2e; }
-  .dot.green { background: #28c840; }
-
-  .title-bar-text {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.7rem;
-    color: var(--text-gray);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-  }
-
-  /* -- TERMINAL BODY -- */
-  .terminal-body {
-    padding: 1.5rem;
-    min-height: 380px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* -- HEADER / BOOT SEQUENCE -- */
-  .boot-header {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-subtle);
-  }
-
-  .boot-line {
-    font-size: 0.7rem;
-    color: var(--text-gray);
-    letter-spacing: 0.1em;
-    line-height: 1.8;
-  }
-
-  .boot-line .ok {
-    color: var(--neon-green);
-  }
-
-  .system-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--neon-green);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin: 0.75rem 0 0.25rem;
-    text-shadow: 0 0 20px var(--neon-green-glow), 0 0 40px rgba(0, 255, 136, 0.15);
-    animation: glitch 8s infinite;
-  }
-
-  @keyframes glitch {
-    0%, 94%, 100% { transform: translate(0); opacity: 1; }
-    95% { transform: translate(-2px, 1px); opacity: 0.8; }
-    96% { transform: translate(2px, -1px); opacity: 0.9; }
-    97% { transform: translate(-1px, -1px); opacity: 0.85; }
-    98% { transform: translate(1px, 0); opacity: 1; }
-  }
-
-  .system-subtitle {
-    font-size: 0.7rem;
-    color: var(--text-gray);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-  }
-
-  /* -- STATUS BAR -- */
-  .status-bar {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.5rem 0;
-    margin-bottom: 1.25rem;
-    border-top: 1px solid var(--border-subtle);
-    border-bottom: 1px solid var(--border-subtle);
-    font-size: 0.65rem;
-    color: var(--text-gray);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    flex-wrap: wrap;
-  }
-
-  .status-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .live-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--neon-green);
-    border-radius: 50%;
-    box-shadow: 0 0 6px var(--neon-green);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.7); }
-  }
-
-  .status-value {
-    color: var(--neon-green);
-  }
-
-  /* -- OUTPUT AREA -- */
-  .output-area {
-    flex: 1;
-    margin-bottom: 1.25rem;
-    min-height: 160px;
-  }
-
-  .prompt-line {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .prompt-symbol {
-    color: var(--neon-green);
-    font-weight: 700;
-    flex-shrink: 0;
-    text-shadow: 0 0 8px var(--neon-green-glow);
-  }
-
-  .prompt-label {
-    color: var(--neon-green);
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-shadow: 0 0 8px var(--neon-green-glow);
-  }
-
-  /* -- KEYWORD DISPLAY -- */
-  .keyword-display {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 0.08em;
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
-    margin-left: 1.25rem;
-    margin-bottom: 0.75rem;
-  }
-
-  /* -- DESCRIPTION OUTPUT -- */
-  .description-output {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    line-height: 1.7;
-    margin-left: 1.25rem;
-    min-height: 80px;
-    position: relative;
-  }
-
-  .description-text {
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  /* -- CURSOR -- */
-  .cursor {
-    display: inline-block;
-    width: 8px;
-    height: 1.1em;
-    background: var(--neon-green);
-    vertical-align: text-bottom;
-    animation: blink 1s step-end infinite;
-    box-shadow: 0 0 6px var(--neon-green-glow);
-    margin-left: 2px;
-  }
-
-  @keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
-  }
-
-  .cursor.typing {
-    animation: none;
-    opacity: 1;
-  }
-
-  /* -- IDLE STATE -- */
-  .idle-message {
-    color: var(--text-gray);
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-    margin-left: 1.25rem;
-  }
-
-  .idle-message .cursor {
-    background: var(--text-gray);
-    box-shadow: none;
-  }
-
-  /* -- LOADING STATE -- */
-  .loading-text {
-    color: var(--neon-amber);
-    font-size: 0.8rem;
-    letter-spacing: 0.1em;
-    margin-left: 1.25rem;
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-  }
-
-  .loading-dots::after {
-    content: '';
-    animation: dots 1.5s steps(4, end) infinite;
-  }
-
-  @keyframes dots {
-    0% { content: ''; }
-    25% { content: '.'; }
-    50% { content: '..'; }
-    75% { content: '...'; }
-    100% { content: ''; }
-  }
-
-  /* -- ERROR STATE -- */
-  .error-line {
-    margin-left: 1.25rem;
-  }
-
-  .error-prefix {
-    color: var(--neon-red);
-    font-weight: 700;
-    font-size: 0.8rem;
-    letter-spacing: 0.1em;
-    text-shadow: 0 0 10px rgba(255, 51, 85, 0.4);
-  }
-
-  .error-message {
-    color: var(--neon-red);
-    font-size: 0.78rem;
-    opacity: 0.85;
-    line-height: 1.6;
-  }
-
-  .error-code {
-    color: var(--text-gray);
-    font-size: 0.65rem;
-    margin-top: 0.5rem;
-    margin-left: 1.25rem;
-    letter-spacing: 0.05em;
-  }
-
-  /* -- PROGRESS BAR -- */
-  .progress-container {
-    margin: 0.75rem 0 0.5rem 1.25rem;
-    max-width: 300px;
-  }
-
-  .progress-bar {
-    height: 3px;
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    width: 0%;
-    background: var(--neon-green);
-    box-shadow: 0 0 8px var(--neon-green);
-    border-radius: 2px;
-    transition: width 0.3s ease;
-    position: relative;
-  }
-
-  .progress-fill::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.3) 50%,
-      transparent 100%
-    );
-    animation: shimmer 1.5s infinite;
-  }
-
-  @keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-  }
-
-  /* -- SEPARATOR -- */
-  .separator {
-    height: 1px;
-    background: var(--border-subtle);
-    margin: 0.75rem 0;
-  }
-
-  /* -- EXECUTE BUTTON -- */
-  .btn-container {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .btn-execute {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: transparent;
-    color: var(--neon-green);
-    border: 1px solid var(--neon-green);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 0.6rem 1.5rem;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
-  }
-
-  .btn-execute::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--neon-green);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .btn-execute:hover:not(:disabled) {
-    box-shadow: 0 0 20px var(--neon-green-glow), 0 0 40px rgba(0, 255, 136, 0.1);
-    text-shadow: 0 0 8px var(--neon-green-glow);
-  }
-
-  .btn-execute:hover:not(:disabled)::before {
-    opacity: 0.08;
-  }
-
-  .btn-execute:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-
-  .btn-execute:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    border-color: var(--text-gray);
-    color: var(--text-gray);
-    box-shadow: none;
-  }
-
-  .btn-prefix {
-    color: var(--text-gray);
-    font-weight: 400;
-  }
-
-  .run-count {
-    font-size: 0.6rem;
-    color: var(--text-gray);
-    letter-spacing: 0.1em;
-  }
-
-  /* -- FOOTER -- */
-  .terminal-footer {
-    padding: 10px 16px;
-    background: #0e0e14;
-    border-top: 1px solid var(--border-subtle);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.6rem;
-    color: var(--text-gray);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .footer-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  /* -- SCREEN FLICKER on execute -- */
-  .screen-flash {
-    animation: screenFlash 0.15s ease;
-  }
-
-  @keyframes screenFlash {
-    0% { filter: brightness(1); }
-    50% { filter: brightness(1.5) contrast(1.2); }
-    100% { filter: brightness(1); }
-  }
-
-  /* -- FADE IN for content -- */
-  .fade-in {
-    animation: fadeIn 0.4s ease both;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* -- ERROR SHAKE -- */
-  .error-shake {
-    animation: errorShake 0.4s ease;
-  }
-
-  @keyframes errorShake {
-    0%, 100% { transform: translateX(0); }
-    20% { transform: translateX(-4px); }
-    40% { transform: translateX(4px); }
-    60% { transform: translateX(-3px); }
-    80% { transform: translateX(2px); }
-  }
-
-  /* -- RESPONSIVE -- */
-  @media (max-width: 480px) {
-    .terminal-body { padding: 1rem; }
-    .system-title { font-size: 1.1rem; }
-    .status-bar { gap: 0.6rem; font-size: 0.6rem; }
-    .keyword-display { font-size: 0.95rem; }
-  }
-</style>
-</head>
-<body>
-
-<div class="ambient"></div>
-
-<div class="terminal-container">
-  <div class="terminal-window" id="terminalWindow">
-
-    <!-- TITLE BAR -->
-    <div class="title-bar">
-      <div class="traffic-lights">
-        <div class="dot red"></div>
-        <div class="dot yellow"></div>
-        <div class="dot green"></div>
-      </div>
-      <span class="title-bar-text">linz@terminal ~ /knowledge</span>
-    </div>
-
-    <!-- TERMINAL BODY -->
-    <div class="terminal-body">
-
-      <!-- BOOT HEADER -->
-      <div class="boot-header">
-        <div class="boot-line">[<span class="ok">OK</span>] KNOWLEDGE_ENGINE v2.7.1 loaded</div>
-        <div class="boot-line">[<span class="ok">OK</span>] STREAMING_MODULE initialized</div>
-        <div class="boot-line">[<span class="ok">OK</span>] DATABASE connected — 3 entries indexed</div>
-        <div class="system-title">LINZ TERMINAL</div>
-        <div class="system-subtitle">// keyword exploration interface</div>
-      </div>
-
-      <!-- STATUS BAR -->
-      <div class="status-bar">
-        <div class="status-item">
-          <div class="live-dot"></div>
-          <span class="status-value">ONLINE</span>
-        </div>
-        <div class="status-item">
-          SYS: <span class="status-value">READY</span>
-        </div>
-        <div class="status-item">
-          DB: <span class="status-value">3 RECORDS</span>
-        </div>
-        <div class="status-item" id="timestampItem">
-          <span id="timestamp"></span>
-        </div>
-      </div>
-
-      <!-- OUTPUT AREA -->
-      <div class="output-area" id="outputArea">
-        <div class="idle-message">
-          Awaiting command<span class="cursor"></span>
-        </div>
-      </div>
-
-      <!-- SEPARATOR -->
-      <div class="separator"></div>
-
-      <!-- BUTTON -->
-      <div class="btn-container">
-        <button class="btn-execute" id="executeBtn" onclick="executeQuery()">
-          <span class="btn-prefix">$</span> EXECUTE
-        </button>
-        <span class="run-count" id="runCount">RUNS: 0</span>
-      </div>
-
-    </div>
-
-    <!-- FOOTER -->
-    <div class="terminal-footer">
-      <div class="footer-status">
-        <div class="live-dot" style="width:4px;height:4px;"></div>
-        <span>PID 4827</span>
-      </div>
-      <span>LINZ PROTO-3 // TERMINAL v1.0</span>
-    </div>
-
-  </div>
-</div>
-
-<script>
-  // -- MOCK DATA --
-  const mockKeywords = [
-    { keyword: "Quantum Entanglement", description: "A phenomenon in quantum mechanics where two or more particles become interconnected in such a way that the quantum state of each particle cannot be described independently. When measured, entangled particles show correlated results regardless of the distance separating them, a feature Einstein famously called 'spooky action at a distance'." },
-    { keyword: "Biomimicry", description: "An approach to innovation that seeks sustainable solutions by emulating nature's time-tested patterns and strategies. From Velcro inspired by burrs to bullet trains shaped like kingfisher beaks, biomimicry bridges biology and engineering to solve human design challenges." },
-    { keyword: "Fermentation", description: "A metabolic process in which organisms convert carbohydrates into alcohols or acids under anaerobic conditions. Used for millennia in producing bread, wine, and cheese, fermentation is now central to biotechnology for creating antibiotics, biofuels, and fermented foods." }
-  ];
-
-  // -- STATE --
-  let isRunning = false;
-  let runCount = 0;
-  let typewriterTimeout = null;
-  let lastKeywordIndex = -1;
-
-  // -- ELEMENTS --
-  const outputArea = document.getElementById('outputArea');
-  const executeBtn = document.getElementById('executeBtn');
-  const runCountEl = document.getElementById('runCount');
-  const terminalWindow = document.getElementById('terminalWindow');
-  const timestampEl = document.getElementById('timestamp');
-
-  // -- TIMESTAMP --
-  function updateTimestamp() {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    const s = String(now.getSeconds()).padStart(2, '0');
-    timestampEl.textContent = h + ':' + m + ':' + s;
-  }
-  updateTimestamp();
-  setInterval(updateTimestamp, 1000);
-
-  // -- PICK RANDOM KEYWORD (avoid repeats) --
-  function pickKeyword() {
-    let idx;
-    do {
-      idx = Math.floor(Math.random() * mockKeywords.length);
-    } while (idx === lastKeywordIndex && mockKeywords.length > 1);
-    lastKeywordIndex = idx;
-    return mockKeywords[idx];
-  }
-
-  // -- TYPEWRITER EFFECT --
-  function typeWriter(text, element, speed, onComplete) {
-    let i = 0;
-    const cursorEl = element.parentNode.querySelector('.cursor');
-
-    function type() {
-      if (i < text.length) {
-        element.textContent += text.charAt(i);
-        i++;
-
-        // Variable speed for natural feel
-        const char = text.charAt(i - 1);
-        let delay = speed;
-        if (char === '.' || char === ',') delay = speed * 3;
-        else if (char === ' ') delay = speed * 0.5;
-        else delay = speed + Math.random() * (speed * 0.8);
-
-        typewriterTimeout = setTimeout(type, delay);
-      } else {
-        if (cursorEl) cursorEl.classList.remove('typing');
-        if (onComplete) onComplete();
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LINZ // TERMINAL INTERFACE</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Fira+Code:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-    }
 
-    if (cursorEl) cursorEl.classList.add('typing');
-    type();
-  }
+      :root {
+        --font-mono: "JetBrains Mono", "Fira Code", monospace;
+        --bg-base: #0a0a0f;
+        --bg-surface: #0c0c10;
+        --bg-terminal: #050508;
+        --neon-green: #00ff88;
+        --neon-green-dim: rgba(0, 255, 136, 0.15);
+        --neon-green-glow: rgba(0, 255, 136, 0.4);
+        --neon-red: #ff3355;
+        --neon-red-dim: rgba(255, 51, 85, 0.15);
+        --neon-amber: #ffd700;
+        --text-gray: #666;
+        --text-light: #999;
+        --text-body: #ccc;
+        --border-subtle: rgba(0, 255, 136, 0.08);
+        --border-active: rgba(0, 255, 136, 0.2);
+        --scanline-opacity: 0.03;
+      }
 
-  // -- SCREEN FLASH --
-  function flashScreen() {
-    terminalWindow.classList.add('screen-flash');
-    setTimeout(() => terminalWindow.classList.remove('screen-flash'), 150);
-  }
+      html {
+        font-size: 16px;
+      }
 
-  // -- RENDER LOADING STATE --
-  function renderLoading() {
-    outputArea.innerHTML = `
+      body {
+        background-color: var(--bg-base);
+        color: var(--text-body);
+        font-family: var(--font-mono);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      /* -- SCANLINE OVERLAY -- */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 255, 136, var(--scanline-opacity)) 2px,
+          rgba(0, 255, 136, var(--scanline-opacity)) 4px
+        );
+        pointer-events: none;
+        z-index: 9999;
+      }
+
+      /* -- CRT VIGNETTE -- */
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.6) 100%);
+        pointer-events: none;
+        z-index: 9998;
+      }
+
+      /* -- AMBIENT GLOW -- */
+      .ambient {
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(ellipse at 30% 70%, rgba(0, 255, 136, 0.03) 0%, transparent 50%),
+          radial-gradient(ellipse at 70% 30%, rgba(0, 180, 100, 0.02) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* -- MAIN CONTAINER -- */
+      .terminal-container {
+        width: 100%;
+        max-width: 640px;
+        position: relative;
+        z-index: 1;
+        animation: bootUp 0.8s ease both;
+      }
+
+      @keyframes bootUp {
+        0% {
+          opacity: 0;
+          transform: translateY(10px);
+          filter: blur(2px);
+        }
+        60% {
+          opacity: 1;
+          filter: blur(0);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+
+      /* -- TERMINAL WINDOW CHROME -- */
+      .terminal-window {
+        background: var(--bg-terminal);
+        border: 1px solid var(--border-active);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow:
+          0 0 30px rgba(0, 255, 136, 0.05),
+          0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      /* -- TITLE BAR -- */
+      .title-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        background: #0e0e14;
+        border-bottom: 1px solid var(--border-subtle);
+        position: relative;
+      }
+
+      .traffic-lights {
+        display: flex;
+        gap: 6px;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .dot.red {
+        background: #ff5f57;
+      }
+      .dot.yellow {
+        background: #ffbd2e;
+      }
+      .dot.green {
+        background: #28c840;
+      }
+
+      .title-bar-text {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.7rem;
+        color: var(--text-gray);
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      /* -- TERMINAL BODY -- */
+      .terminal-body {
+        padding: 1.5rem;
+        min-height: 380px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* -- HEADER / BOOT SEQUENCE -- */
+      .boot-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .boot-line {
+        font-size: 0.7rem;
+        color: var(--text-gray);
+        letter-spacing: 0.1em;
+        line-height: 1.8;
+      }
+
+      .boot-line .ok {
+        color: var(--neon-green);
+      }
+
+      .system-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--neon-green);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        margin: 0.75rem 0 0.25rem;
+        text-shadow:
+          0 0 20px var(--neon-green-glow),
+          0 0 40px rgba(0, 255, 136, 0.15);
+        animation: glitch 8s infinite;
+      }
+
+      @keyframes glitch {
+        0%,
+        94%,
+        100% {
+          transform: translate(0);
+          opacity: 1;
+        }
+        95% {
+          transform: translate(-2px, 1px);
+          opacity: 0.8;
+        }
+        96% {
+          transform: translate(2px, -1px);
+          opacity: 0.9;
+        }
+        97% {
+          transform: translate(-1px, -1px);
+          opacity: 0.85;
+        }
+        98% {
+          transform: translate(1px, 0);
+          opacity: 1;
+        }
+      }
+
+      .system-subtitle {
+        font-size: 0.7rem;
+        color: var(--text-gray);
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      /* -- STATUS BAR -- */
+      .status-bar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.5rem 0;
+        margin-bottom: 1.25rem;
+        border-top: 1px solid var(--border-subtle);
+        border-bottom: 1px solid var(--border-subtle);
+        font-size: 0.65rem;
+        color: var(--text-gray);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        flex-wrap: wrap;
+      }
+
+      .status-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .live-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--neon-green);
+        border-radius: 50%;
+        box-shadow: 0 0 6px var(--neon-green);
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.4;
+          transform: scale(0.7);
+        }
+      }
+
+      .status-value {
+        color: var(--neon-green);
+      }
+
+      /* -- OUTPUT AREA -- */
+      .output-area {
+        flex: 1;
+        margin-bottom: 1.25rem;
+        min-height: 160px;
+      }
+
+      .prompt-line {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+      }
+
+      .prompt-symbol {
+        color: var(--neon-green);
+        font-weight: 700;
+        flex-shrink: 0;
+        text-shadow: 0 0 8px var(--neon-green-glow);
+      }
+
+      .prompt-label {
+        color: var(--neon-green);
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-shadow: 0 0 8px var(--neon-green-glow);
+      }
+
+      /* -- KEYWORD DISPLAY -- */
+      .keyword-display {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.08em;
+        text-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+        margin-left: 1.25rem;
+        margin-bottom: 0.75rem;
+      }
+
+      /* -- DESCRIPTION OUTPUT -- */
+      .description-output {
+        font-size: 0.8rem;
+        color: var(--text-light);
+        line-height: 1.7;
+        margin-left: 1.25rem;
+        min-height: 80px;
+        position: relative;
+      }
+
+      .description-text {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      /* -- CURSOR -- */
+      .cursor {
+        display: inline-block;
+        width: 8px;
+        height: 1.1em;
+        background: var(--neon-green);
+        vertical-align: text-bottom;
+        animation: blink 1s step-end infinite;
+        box-shadow: 0 0 6px var(--neon-green-glow);
+        margin-left: 2px;
+      }
+
+      @keyframes blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        51%,
+        100% {
+          opacity: 0;
+        }
+      }
+
+      .cursor.typing {
+        animation: none;
+        opacity: 1;
+      }
+
+      /* -- IDLE STATE -- */
+      .idle-message {
+        color: var(--text-gray);
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        margin-left: 1.25rem;
+      }
+
+      .idle-message .cursor {
+        background: var(--text-gray);
+        box-shadow: none;
+      }
+
+      /* -- LOADING STATE -- */
+      .loading-text {
+        color: var(--neon-amber);
+        font-size: 0.8rem;
+        letter-spacing: 0.1em;
+        margin-left: 1.25rem;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+      }
+
+      .loading-dots::after {
+        content: "";
+        animation: dots 1.5s steps(4, end) infinite;
+      }
+
+      @keyframes dots {
+        0% {
+          content: "";
+        }
+        25% {
+          content: ".";
+        }
+        50% {
+          content: "..";
+        }
+        75% {
+          content: "...";
+        }
+        100% {
+          content: "";
+        }
+      }
+
+      /* -- ERROR STATE -- */
+      .error-line {
+        margin-left: 1.25rem;
+      }
+
+      .error-prefix {
+        color: var(--neon-red);
+        font-weight: 700;
+        font-size: 0.8rem;
+        letter-spacing: 0.1em;
+        text-shadow: 0 0 10px rgba(255, 51, 85, 0.4);
+      }
+
+      .error-message {
+        color: var(--neon-red);
+        font-size: 0.78rem;
+        opacity: 0.85;
+        line-height: 1.6;
+      }
+
+      .error-code {
+        color: var(--text-gray);
+        font-size: 0.65rem;
+        margin-top: 0.5rem;
+        margin-left: 1.25rem;
+        letter-spacing: 0.05em;
+      }
+
+      /* -- PROGRESS BAR -- */
+      .progress-container {
+        margin: 0.75rem 0 0.5rem 1.25rem;
+        max-width: 300px;
+      }
+
+      .progress-bar {
+        height: 3px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: var(--neon-green);
+        box-shadow: 0 0 8px var(--neon-green);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+        position: relative;
+      }
+
+      .progress-fill::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.3) 50%,
+          transparent 100%
+        );
+        animation: shimmer 1.5s infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      /* -- SEPARATOR -- */
+      .separator {
+        height: 1px;
+        background: var(--border-subtle);
+        margin: 0.75rem 0;
+      }
+
+      /* -- EXECUTE BUTTON -- */
+      .btn-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .btn-execute {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: transparent;
+        color: var(--neon-green);
+        border: 1px solid var(--neon-green);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        padding: 0.6rem 1.5rem;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
+      }
+
+      .btn-execute::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--neon-green);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .btn-execute:hover:not(:disabled) {
+        box-shadow:
+          0 0 20px var(--neon-green-glow),
+          0 0 40px rgba(0, 255, 136, 0.1);
+        text-shadow: 0 0 8px var(--neon-green-glow);
+      }
+
+      .btn-execute:hover:not(:disabled)::before {
+        opacity: 0.08;
+      }
+
+      .btn-execute:active:not(:disabled) {
+        transform: scale(0.97);
+      }
+
+      .btn-execute:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        border-color: var(--text-gray);
+        color: var(--text-gray);
+        box-shadow: none;
+      }
+
+      .btn-prefix {
+        color: var(--text-gray);
+        font-weight: 400;
+      }
+
+      .run-count {
+        font-size: 0.6rem;
+        color: var(--text-gray);
+        letter-spacing: 0.1em;
+      }
+
+      /* -- FOOTER -- */
+      .terminal-footer {
+        padding: 10px 16px;
+        background: #0e0e14;
+        border-top: 1px solid var(--border-subtle);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.6rem;
+        color: var(--text-gray);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .footer-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      /* -- SCREEN FLICKER on execute -- */
+      .screen-flash {
+        animation: screenFlash 0.15s ease;
+      }
+
+      @keyframes screenFlash {
+        0% {
+          filter: brightness(1);
+        }
+        50% {
+          filter: brightness(1.5) contrast(1.2);
+        }
+        100% {
+          filter: brightness(1);
+        }
+      }
+
+      /* -- FADE IN for content -- */
+      .fade-in {
+        animation: fadeIn 0.4s ease both;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* -- ERROR SHAKE -- */
+      .error-shake {
+        animation: errorShake 0.4s ease;
+      }
+
+      @keyframes errorShake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20% {
+          transform: translateX(-4px);
+        }
+        40% {
+          transform: translateX(4px);
+        }
+        60% {
+          transform: translateX(-3px);
+        }
+        80% {
+          transform: translateX(2px);
+        }
+      }
+
+      /* -- RESPONSIVE -- */
+      @media (max-width: 480px) {
+        .terminal-body {
+          padding: 1rem;
+        }
+        .system-title {
+          font-size: 1.1rem;
+        }
+        .status-bar {
+          gap: 0.6rem;
+          font-size: 0.6rem;
+        }
+        .keyword-display {
+          font-size: 0.95rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ambient"></div>
+
+    <div class="terminal-container">
+      <div class="terminal-window" id="terminalWindow">
+        <!-- TITLE BAR -->
+        <div class="title-bar">
+          <div class="traffic-lights">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+          </div>
+          <span class="title-bar-text">linz@terminal ~ /knowledge</span>
+        </div>
+
+        <!-- TERMINAL BODY -->
+        <div class="terminal-body">
+          <!-- BOOT HEADER -->
+          <div class="boot-header">
+            <div class="boot-line">[<span class="ok">OK</span>] KNOWLEDGE_ENGINE v2.7.1 loaded</div>
+            <div class="boot-line">[<span class="ok">OK</span>] STREAMING_MODULE initialized</div>
+            <div class="boot-line">
+              [<span class="ok">OK</span>] DATABASE connected — 3 entries indexed
+            </div>
+            <div class="system-title">LINZ TERMINAL</div>
+            <div class="system-subtitle">// keyword exploration interface</div>
+          </div>
+
+          <!-- STATUS BAR -->
+          <div class="status-bar">
+            <div class="status-item">
+              <div class="live-dot"></div>
+              <span class="status-value">ONLINE</span>
+            </div>
+            <div class="status-item">SYS: <span class="status-value">READY</span></div>
+            <div class="status-item">DB: <span class="status-value">3 RECORDS</span></div>
+            <div class="status-item" id="timestampItem">
+              <span id="timestamp"></span>
+            </div>
+          </div>
+
+          <!-- OUTPUT AREA -->
+          <div class="output-area" id="outputArea">
+            <div class="idle-message">Awaiting command<span class="cursor"></span></div>
+          </div>
+
+          <!-- SEPARATOR -->
+          <div class="separator"></div>
+
+          <!-- BUTTON -->
+          <div class="btn-container">
+            <button class="btn-execute" id="executeBtn" onclick="executeQuery()">
+              <span class="btn-prefix">$</span> EXECUTE
+            </button>
+            <span class="run-count" id="runCount">RUNS: 0</span>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="terminal-footer">
+          <div class="footer-status">
+            <div class="live-dot" style="width: 4px; height: 4px"></div>
+            <span>PID 4827</span>
+          </div>
+          <span>LINZ PROTO-3 // TERMINAL v1.0</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // -- MOCK DATA --
+      const mockKeywords = [
+        {
+          keyword: "Quantum Entanglement",
+          description:
+            "A phenomenon in quantum mechanics where two or more particles become interconnected in such a way that the quantum state of each particle cannot be described independently. When measured, entangled particles show correlated results regardless of the distance separating them, a feature Einstein famously called 'spooky action at a distance'.",
+        },
+        {
+          keyword: "Biomimicry",
+          description:
+            "An approach to innovation that seeks sustainable solutions by emulating nature's time-tested patterns and strategies. From Velcro inspired by burrs to bullet trains shaped like kingfisher beaks, biomimicry bridges biology and engineering to solve human design challenges.",
+        },
+        {
+          keyword: "Fermentation",
+          description:
+            "A metabolic process in which organisms convert carbohydrates into alcohols or acids under anaerobic conditions. Used for millennia in producing bread, wine, and cheese, fermentation is now central to biotechnology for creating antibiotics, biofuels, and fermented foods.",
+        },
+      ];
+
+      // -- STATE --
+      let isRunning = false;
+      let runCount = 0;
+      let typewriterTimeout = null;
+      let lastKeywordIndex = -1;
+
+      // -- ELEMENTS --
+      const outputArea = document.getElementById("outputArea");
+      const executeBtn = document.getElementById("executeBtn");
+      const runCountEl = document.getElementById("runCount");
+      const terminalWindow = document.getElementById("terminalWindow");
+      const timestampEl = document.getElementById("timestamp");
+
+      // -- TIMESTAMP --
+      function updateTimestamp() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, "0");
+        const m = String(now.getMinutes()).padStart(2, "0");
+        const s = String(now.getSeconds()).padStart(2, "0");
+        timestampEl.textContent = h + ":" + m + ":" + s;
+      }
+      updateTimestamp();
+      setInterval(updateTimestamp, 1000);
+
+      // -- PICK RANDOM KEYWORD (avoid repeats) --
+      function pickKeyword() {
+        let idx;
+        do {
+          idx = Math.floor(Math.random() * mockKeywords.length);
+        } while (idx === lastKeywordIndex && mockKeywords.length > 1);
+        lastKeywordIndex = idx;
+        return mockKeywords[idx];
+      }
+
+      // -- TYPEWRITER EFFECT --
+      function typeWriter(text, element, speed, onComplete) {
+        let i = 0;
+        const cursorEl = element.parentNode.querySelector(".cursor");
+
+        function type() {
+          if (i < text.length) {
+            element.textContent += text.charAt(i);
+            i++;
+
+            // Variable speed for natural feel
+            const char = text.charAt(i - 1);
+            let delay = speed;
+            if (char === "." || char === ",") delay = speed * 3;
+            else if (char === " ") delay = speed * 0.5;
+            else delay = speed + Math.random() * (speed * 0.8);
+
+            typewriterTimeout = setTimeout(type, delay);
+          } else {
+            if (cursorEl) cursorEl.classList.remove("typing");
+            if (onComplete) onComplete();
+          }
+        }
+
+        if (cursorEl) cursorEl.classList.add("typing");
+        type();
+      }
+
+      // -- SCREEN FLASH --
+      function flashScreen() {
+        terminalWindow.classList.add("screen-flash");
+        setTimeout(() => terminalWindow.classList.remove("screen-flash"), 150);
+      }
+
+      // -- RENDER LOADING STATE --
+      function renderLoading() {
+        outputArea.innerHTML = `
       <div class="prompt-line fade-in">
         <span class="prompt-symbol">&gt;</span>
         <span class="prompt-label">QUERY:</span>
@@ -726,23 +831,27 @@
       </div>
     `;
 
-    // Animate progress bar
-    requestAnimationFrame(() => {
-      const fill = document.getElementById('progressFill');
-      if (fill) {
-        fill.style.width = '30%';
-        setTimeout(() => { if (fill) fill.style.width = '65%'; }, 400);
-        setTimeout(() => { if (fill) fill.style.width = '85%'; }, 800);
+        // Animate progress bar
+        requestAnimationFrame(() => {
+          const fill = document.getElementById("progressFill");
+          if (fill) {
+            fill.style.width = "30%";
+            setTimeout(() => {
+              if (fill) fill.style.width = "65%";
+            }, 400);
+            setTimeout(() => {
+              if (fill) fill.style.width = "85%";
+            }, 800);
+          }
+        });
       }
-    });
-  }
 
-  // -- RENDER ERROR STATE --
-  function renderError() {
-    terminalWindow.classList.add('error-shake');
-    setTimeout(() => terminalWindow.classList.remove('error-shake'), 400);
+      // -- RENDER ERROR STATE --
+      function renderError() {
+        terminalWindow.classList.add("error-shake");
+        setTimeout(() => terminalWindow.classList.remove("error-shake"), 400);
 
-    outputArea.innerHTML = `
+        outputArea.innerHTML = `
       <div class="prompt-line fade-in">
         <span class="prompt-symbol" style="color:var(--neon-red);text-shadow:0 0 8px rgba(255,51,85,0.4);">&gt;</span>
         <span class="prompt-label" style="color:var(--neon-red);text-shadow:0 0 8px rgba(255,51,85,0.4);">QUERY:</span>
@@ -755,11 +864,11 @@
         ERR_STREAM_TIMEOUT [0x1A3F] — retry recommended
       </div>
     `;
-  }
+      }
 
-  // -- RENDER RESULT STATE --
-  function renderResult(data) {
-    outputArea.innerHTML = `
+      // -- RENDER RESULT STATE --
+      function renderResult(data) {
+        outputArea.innerHTML = `
       <div class="prompt-line fade-in">
         <span class="prompt-symbol">&gt;</span>
         <span class="prompt-label">KEYWORD:</span>
@@ -774,52 +883,51 @@
       </div>
     `;
 
-    // Complete progress bar before typing
-    setTimeout(() => {
-      const descText = document.getElementById('descText');
-      if (descText) {
-        typeWriter(data.description, descText, 18, () => {
-          isRunning = false;
-          executeBtn.disabled = false;
-        });
-      }
-    }, 200);
-  }
-
-  // -- MAIN EXECUTE FUNCTION --
-  function executeQuery() {
-    if (isRunning) return;
-    isRunning = true;
-    executeBtn.disabled = true;
-    runCount++;
-    runCountEl.textContent = 'RUNS: ' + runCount;
-
-    // Clear any pending typewriter
-    if (typewriterTimeout) {
-      clearTimeout(typewriterTimeout);
-      typewriterTimeout = null;
-    }
-
-    flashScreen();
-    renderLoading();
-
-    // Simulate network delay
-    const delay = 1200 + Math.random() * 600;
-
-    setTimeout(() => {
-      // 10% chance of error
-      if (Math.random() < 0.1) {
-        renderError();
-        isRunning = false;
-        executeBtn.disabled = false;
-        return;
+        // Complete progress bar before typing
+        setTimeout(() => {
+          const descText = document.getElementById("descText");
+          if (descText) {
+            typeWriter(data.description, descText, 18, () => {
+              isRunning = false;
+              executeBtn.disabled = false;
+            });
+          }
+        }, 200);
       }
 
-      const data = pickKeyword();
-      renderResult(data);
-    }, delay);
-  }
-</script>
+      // -- MAIN EXECUTE FUNCTION --
+      function executeQuery() {
+        if (isRunning) return;
+        isRunning = true;
+        executeBtn.disabled = true;
+        runCount++;
+        runCountEl.textContent = "RUNS: " + runCount;
 
-</body>
+        // Clear any pending typewriter
+        if (typewriterTimeout) {
+          clearTimeout(typewriterTimeout);
+          typewriterTimeout = null;
+        }
+
+        flashScreen();
+        renderLoading();
+
+        // Simulate network delay
+        const delay = 1200 + Math.random() * 600;
+
+        setTimeout(() => {
+          // 10% chance of error
+          if (Math.random() < 0.1) {
+            renderError();
+            isRunning = false;
+            executeBtn.disabled = false;
+            return;
+          }
+
+          const data = pickKeyword();
+          renderResult(data);
+        }, delay);
+      }
+    </script>
+  </body>
 </html>

@@ -4,9 +4,7 @@ type Source = "wikipedia" | "hackernews";
 
 export function StageButton() {
   const [isLoading, setIsLoading] = useState(false);
-  const [sources, setSources] = useState<Set<Source>>(
-    new Set(["wikipedia", "hackernews"])
-  );
+  const [sources, setSources] = useState<Set<Source>>(new Set(["wikipedia", "hackernews"]));
 
   function toggleSource(source: Source) {
     setSources((prev) => {
@@ -35,11 +33,7 @@ export function StageButton() {
       <div className="source-selector">
         {(["wikipedia", "hackernews"] as Source[]).map((src) => (
           <label key={src} className="source-option">
-            <input
-              type="checkbox"
-              checked={sources.has(src)}
-              onChange={() => toggleSource(src)}
-            />
+            <input type="checkbox" checked={sources.has(src)} onChange={() => toggleSource(src)} />
             <span className="source-option-label">{src}</span>
           </label>
         ))}
@@ -47,7 +41,9 @@ export function StageButton() {
       <a href="/discover" className="discover-btn" onClick={handleDiscover}>
         <div className="btn-glow" />
         <div className="btn-ring">
-          <span className="btn-label" data-text="発見する">発見する</span>
+          <span className="btn-label" data-text="発見する">
+            発見する
+          </span>
         </div>
       </a>
       <div className="btn-hint">tap to unveil a new world</div>
