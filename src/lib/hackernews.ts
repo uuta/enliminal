@@ -1,4 +1,4 @@
-import type { WikiKeyword } from "@/lib/wikipedia";
+import type { Keyword } from "@/lib/types";
 
 const HN_TOP = "https://hacker-news.firebaseio.com/v0/topstories.json";
 const HN_ITEM = (id: number) =>
@@ -9,7 +9,7 @@ interface Response {
   text?: string;
 }
 
-export async function fetchRandomHNKeyword(): Promise<WikiKeyword> {
+export async function fetchRandomHNKeyword(): Promise<Keyword> {
   const res = await fetch(HN_TOP);
   if (!res.ok) throw new Error(`HN API error: ${res.status}`);
   const ids: number[] = await res.json();

@@ -3,21 +3,21 @@ import { MermaidDiagram } from "@/islands/MermaidDiagram";
 import { KeywordSkeleton, ContentSkeleton, PapersSkeleton, VideosSkeleton } from '@/islands/DiscoverSkeleton';
 import type { KeywordData } from "@/lib/generateContent";
 import { fetchKeywordByTitle } from "@/lib/wikipedia";
-import type { WikiKeyword } from "@/lib/wikipedia";
+import type { Keyword } from "@/lib/types";
 import type { Paper } from "@/lib/semanticScholar";
 import type { Video } from "@/lib/youtube";
 
 type Props = { sources: string };
 
 export function DiscoverContent({ sources }: Props) {
-  const [keyword, setKeyword] = useState<WikiKeyword | null>(null);
+  const [keyword, setKeyword] = useState<Keyword | null>(null);
   const [content, setContent] = useState<KeywordData | null>(null);
   const [papers, setPapers] = useState<Paper[] | null>(null);
   const [videos, setVideos] = useState<Video[] | null>(null);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
   const started = useRef(false);
 
-  async function fetchContent(kw: WikiKeyword) {
+  async function fetchContent(kw: Keyword) {
     const res = await fetch('/api/gemini/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -54,7 +54,7 @@ export function DiscoverContent({ sources }: Props) {
 
   async function runDiscovery() {
     const res = await fetch(`/api/keyword/random?sources=${encodeURIComponent(sources)}`);
-    const kw: WikiKeyword = await res.json();
+    const kw: Keyword = await res.json();
     setKeyword(kw);
     fetchContent(kw);
     fetchPapers(kw.title);

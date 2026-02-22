@@ -1,10 +1,8 @@
-export interface WikiKeyword {
-  title: string;
-  extract: string;
-  pageUrl: string;
-}
+import type { Keyword } from "@/lib/types";
 
-export async function fetchRandomKeyword(): Promise<WikiKeyword> {
+export type { Keyword };
+
+export async function fetchRandomKeyword(): Promise<Keyword> {
   const res = await fetch(
     "https://en.wikipedia.org/api/rest_v1/page/random/summary",
   );
@@ -17,7 +15,7 @@ export async function fetchRandomKeyword(): Promise<WikiKeyword> {
   };
 }
 
-export async function fetchKeywordByTitle(title: string): Promise<WikiKeyword> {
+export async function fetchKeywordByTitle(title: string): Promise<Keyword> {
   const res = await fetch(
     `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
   );

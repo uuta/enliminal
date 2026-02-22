@@ -15,5 +15,8 @@ dist/
 # Vercel
 .vercel/
 
+# Lighthouse CI
+.lighthouseci/
+
 # Playwright MCP logs
 .playwright-mcp/
