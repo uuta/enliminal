@@ -16,15 +16,9 @@ export interface Paper {
   url: string;
 }
 
-export async function fetchRelatedPapers(query: string): Promise<Paper[]> {
+export async function fetchRelatedPapers(query: string): Promise<Response> {
   const url = `${SS_SEARCH}?query=${encodeURIComponent(query)}&fields=title,authors,year&limit=5`;
   const res = await fetch(url);
-  if (!res.ok) return [];
-  const data: Response = await res.json();
-  return (data.data ?? []).map((p) => ({
-    title: p.title,
-    authors: p.authors.map((a) => a.name),
-    year: p.year,
-    url: `https://www.semanticscholar.org/paper/${p.paperId}`,
-  }));
+  if (!res.ok) return { data: [] };
+  return res.json();
 }

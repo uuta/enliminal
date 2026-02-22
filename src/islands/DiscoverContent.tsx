@@ -41,7 +41,12 @@ export function DiscoverContent({ sources }: Props) {
     setPapers(null);
     setVideos(null);
     setSelectedVideoUrl(null);
-    const kw = await fetchKeywordByTitle(term);
+    const raw = await fetchKeywordByTitle(term);
+    const kw: Keyword = {
+      title: raw.title,
+      extract: raw.extract,
+      pageUrl: raw.content_urls.desktop.page,
+    };
     setKeyword(kw);
     loadContent(kw).catch(console.error);
     loadPapers(kw.title).catch(console.error);

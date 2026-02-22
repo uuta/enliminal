@@ -18,17 +18,11 @@ export interface Video {
   thumbnail: string;
 }
 
-export async function fetchRelatedVideos(query: string): Promise<Video[]> {
+export async function fetchRelatedVideos(query: string): Promise<Response> {
   const apiKey = import.meta.env.YOUTUBE_API_KEY;
-  if (!apiKey) return [];
+  if (!apiKey) return { items: [] };
   const url = `${YT_SEARCH}?part=snippet&q=${encodeURIComponent(query)}&maxResults=5&type=video&key=${apiKey}`;
   const res = await fetch(url);
-  if (!res.ok) return [];
-  const data: Response = await res.json();
-  return (data.items ?? []).map((item) => ({
-    title: item.snippet.title,
-    channelTitle: item.snippet.channelTitle,
-    url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-    thumbnail: item.snippet.thumbnails.default.url,
-  }));
+  if (!res.ok) return { items: [] };
+  return res.json();
 }

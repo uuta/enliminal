@@ -1,5 +1,6 @@
-- Don't use useEffect() as far as possible
+- Don not use useEffect() as far as possible
 - `default` shouldn't be used when exporting a component
+- Do not use `else`. Consider that uses early return or make another method
 
 ## Name rule
 
