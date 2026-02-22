@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react';
 import { MermaidDiagram } from "@/islands/MermaidDiagram";
+import { KeywordSkeleton, ContentSkeleton, PapersSkeleton, VideosSkeleton } from '@/islands/DiscoverSkeleton';
 import type { KeywordData } from "@/lib/generateContent";
+import { fetchKeywordByTitle } from "@/lib/wikipedia";
 import type { WikiKeyword } from "@/lib/wikipedia";
 import type { Paper } from "@/lib/semanticScholar";
 import type { Video } from "@/lib/youtube";
@@ -12,6 +14,7 @@ export function DiscoverContent({ sources }: Props) {
   const [content, setContent] = useState<KeywordData | null>(null);
   const [papers, setPapers] = useState<Paper[] | null>(null);
   const [videos, setVideos] = useState<Video[] | null>(null);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
   const started = useRef(false);
 
   async function fetchContent(kw: WikiKeyword) {
@@ -58,6 +61,19 @@ export function DiscoverContent({ sources }: Props) {
     setVideos(data);
   }
 
+  async function searchTerm(term: string) {
+    setKeyword(null);
+    setContent(null);
+    setPapers(null);
+    setVideos(null);
+    setSelectedVideoUrl(null);
+    const kw = await fetchKeywordByTitle(term);
+    setKeyword(kw);
+    fetchContent(kw);
+    fetchPapers(kw.title);
+    fetchVideos(kw.title);
+  }
+
   async function runDiscovery() {
     const res = await fetch(`/api/keyword/random?sources=${encodeURIComponent(sources)}`);
     const kw: WikiKeyword = await res.json();
@@ -73,13 +89,7 @@ export function DiscoverContent({ sources }: Props) {
   }
 
   if (!keyword) {
-    return (
-      <div className="reveal visible" data-testid="reveal-container">
-        <div className="reveal-inner">
-          <div className="reveal-keyword">Loading...</div>
-        </div>
-      </div>
-    );
+    return <KeywordSkeleton />;
   }
 
   return (
@@ -130,7 +140,7 @@ export function DiscoverContent({ sources }: Props) {
               <div className="section-label">Related Terms</div>
               <div className="terms-grid">
                 {content.relatedTerms.map((term, i) => (
-                  <span key={i} className="term-tag">
+                  <span key={i} className="term-tag" onClick={() => searchTerm(term)}>
                     {term}
                   </span>
                 ))}
@@ -138,17 +148,12 @@ export function DiscoverContent({ sources }: Props) {
             </div>
           </>
         ) : (
-          <div className="content-section definition-section">
-            <div className="definition-text">Generating content...</div>
-          </div>
+          <ContentSkeleton />
         )}
 
         {/* Related Papers */}
         {papers === null ? (
-          <div className="content-section papers-section">
-            <div className="section-label">Related Papers</div>
-            <div>Loading papers...</div>
-          </div>
+          <PapersSkeleton />
         ) : papers.length > 0 ? (
           <div className="content-section papers-section visible">
             <div className="section-label">Related Papers</div>
@@ -171,24 +176,34 @@ export function DiscoverContent({ sources }: Props) {
 
         {/* Related Videos */}
         {videos === null ? (
-          <div className="content-section videos-section">
-            <div className="section-label">Related Videos</div>
-            <div>Loading videos...</div>
-          </div>
+          <VideosSkeleton />
         ) : videos.length > 0 ? (
           <div className="content-section videos-section visible">
             <div className="section-label">Related Videos</div>
             <ul className="videos-list">
               {videos.map((v, i) => (
                 <li key={i}>
-                  <a href={v.url} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={v.url}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setSelectedVideoUrl(selectedVideoUrl === v.url ? null : v.url);
+                    }}
+                  >
                     <img src={v.thumbnail} alt={v.title} />
-                    <span className="video-title">{v.title}</span>
                   </a>
-                  <span className="video-channel">{v.channelTitle}</span>
                 </li>
               ))}
             </ul>
+            {selectedVideoUrl && (
+              <div className="video-embed">
+                <iframe
+                  src={`https://www.youtube.com/embed/${new URL(selectedVideoUrl).searchParams.get('v')}?autoplay=1`}
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+              </div>
+            )}
           </div>
         ) : null}
 
