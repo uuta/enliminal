@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import OpenAI from "openai";
-import { SYSTEM_PROMPT } from "@/lib/aiPrompt";
+import { PROMPT } from "@/lib/aiPrompt";
 import { makeStreamResponse } from "@/lib/streamResponse";
 
 const client = new OpenAI({ apiKey: import.meta.env.OPENAI_API_KEY });
@@ -13,7 +13,7 @@ export const POST: APIRoute = async ({ request }) => {
     model: "gpt-5-mini",
     stream: true,
     messages: [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: PROMPT },
       {
         role: "user",
         content: `Keyword: ${keyword}\nSummary: ${extract ?? ""}`,

@@ -1,4 +1,4 @@
-export const SYSTEM_PROMPT = `You are an expert who shares fascinating trivia and specialized knowledge.
+export const PROMPT = `You are an expert who shares fascinating trivia and specialized knowledge.
 
 For the given keyword, respond ONLY with the following JSON (no other text):
 {

@@ -1,5 +1,5 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
-import { SYSTEM_PROMPT } from "@/lib/aiPrompt";
+import { PROMPT } from "@/lib/aiPrompt";
 
 export interface KeywordData {
   title: string;
@@ -27,7 +27,7 @@ export async function generateKeywordContent(
       },
     ],
     config: {
-      systemInstruction: SYSTEM_PROMPT,
+      systemInstruction: PROMPT,
       thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
     },
   });
