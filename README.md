@@ -72,32 +72,51 @@ enliminal/
 ├── src/
 │   ├── pages/
 │   │   ├── index.astro              # メインページ
-│   │   ├── pricing.astro            # 料金ページ
-│   │   ├── account.astro            # アカウント管理
+│   │   ├── discover.astro           # キーワード発見ページ
 │   │   └── api/
-│   │       ├── generate.ts          # OpenAI streaming proxy
-│   │       ├── create-checkout.ts   # Stripe checkout session作成
-│   │       ├── create-portal.ts     # Stripe billing portal作成
-│   │       └── stripe-webhook.ts    # Stripe webhook処理
+│   │       ├── gemini/generate.ts   # Gemini streaming proxy
+│   │       └── openai/generate.ts   # OpenAI streaming proxy
 │   ├── islands/
-│   │   ├── DiscoverButton.tsx       # メインのキーワード発見UI
-│   │   └── PricingCard.tsx          # 料金プランカード
-│   ├── components/
+│   │   ├── DiscoverContent.tsx      # メインのキーワード発見UI (React island)
+│   │   ├── StageButton.tsx          # ステージボタン (React island)
+│   │   └── MermaidDiagram.tsx       # Mermaidダイアグラム表示 (React island)
+│   ├── layouts/
 │   │   └── Layout.astro             # 共通レイアウト
-│   └── lib/
-│       ├── stripe.ts                # Stripe SDK初期化
-│       ├── supabase.ts              # Supabase Auth設定
-│       └── db.ts                    # Neon Postgres接続
-├── docs/
-│   ├── goal.md                      # プロジェクトのゴール
-│   └── task/
-│       └── astro-implementation.md  # 実装プラン
+│   ├── lib/
+│   │   ├── wikipedia.ts             # Wikipedia Random API クライアント
+│   │   ├── hackernews.ts            # HackerNews API クライアント
+│   │   ├── generateContent.ts       # AI コンテンツ生成ロジック
+│   │   ├── aiPrompt.ts              # AI プロンプト定義
+│   │   ├── streamResponse.ts        # streaming レスポンスユーティリティ
+│   │   └── __tests__/
+│   │       ├── wikipedia.test.ts    # Wikipedia クライアントのユニットテスト
+│   │       ├── wikipedia.latency.ts # Wikipedia API レイテンシ計測スクリプト（手動実行）
+│   │       └── hackernews.latency.ts # HackerNews API レイテンシ計測スクリプト（手動実行）
+│   ├── styles/
+│   │   ├── global.css               # グローバルスタイル
+│   │   └── tokens.ts                # デザイントークン
+│   └── test/
+│       └── setup.ts                 # Vitest セットアップ
+├── docs/                            # 設計ドキュメント
 ├── draft/
-│   └── prototype-3.html             # デザインプロトタイプ
+│   └── prototype-3.html             # デザインプロトタイプ（参照用）
 ├── .env.example                     # 環境変数のサンプル
 ├── package.json
 ├── astro.config.mjs
 └── README.md                        # このファイル
+```
+
+### テストの実行
+
+```bash
+# ユニットテスト（vitest）
+bun test
+
+# Wikipedia API レイテンシ計測（実際にネットワーク通信、手動実行）
+bun run src/lib/__tests__/wikipedia.latency.ts
+
+# HackerNews API レイテンシ計測（2リクエスト逐次実行、手動実行）
+bun run src/lib/__tests__/hackernews.latency.ts
 ```
 
 ## データベーススキーマ
