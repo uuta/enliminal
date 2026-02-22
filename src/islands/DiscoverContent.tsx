@@ -21,32 +21,10 @@ export function DiscoverContent({ sources }: Props) {
     const res = await fetch('/api/gemini/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ keyword: kw.title, extract: kw.extract }),
+      body: JSON.stringify({ keyword: kw.title, extract: kw.extract, pageUrl: kw.pageUrl }),
     });
-    if (!res.body) return;
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let rawJson = '';
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      rawJson += decoder.decode(value, { stream: true });
-    }
-    try {
-      const parsed = JSON.parse(rawJson);
-      setContent({ title: kw.title, pageUrl: kw.pageUrl, ...parsed });
-    } catch {
-      setContent({
-        title: kw.title,
-        pageUrl: kw.pageUrl,
-        category: '',
-        definition: rawJson.slice(0, 100),
-        explanation: rawJson,
-        diagram: null,
-        useCases: [],
-        relatedTerms: [],
-      });
-    }
+    const parsed = await res.json();
+    setContent({ title: kw.title, pageUrl: kw.pageUrl, ...parsed });
   }
 
   async function fetchPapers(query: string) {
