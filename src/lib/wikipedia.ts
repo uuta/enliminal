@@ -19,8 +19,24 @@ interface Response {
   originalimage?: { source: string; width: number; height: number };
 }
 
+const WIKI_LANGS = [
+  "en",
+  "ja",
+  "de",
+  "fr",
+  "es",
+  "zh",
+  "ru",
+  "pt",
+  "ar",
+  "ko",
+  "it",
+  "nl",
+] as const;
+
 export async function fetchRandomKeyword(): Promise<Response> {
-  const res = await fetch("https://en.wikipedia.org/api/rest_v1/page/random/summary");
+  const lang = WIKI_LANGS[Math.floor(Math.random() * WIKI_LANGS.length)];
+  const res = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/random/summary`);
   if (!res.ok) throw new Error(`Wikipedia API error: ${res.status}`);
   return res.json();
 }

@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { MermaidDiagram } from "@/islands/MermaidDiagram";
 import { ContentSkeleton, PapersSkeleton, VideosSkeleton } from "@/islands/DiscoverSkeleton";
 import type { KeywordData } from "@/lib/generateContent";
-import { fetchKeywordByTitle } from "@/lib/wikipedia";
 import { fetchRandomKeyword, generateContent, fetchPapers, fetchVideos } from "@/lib/client";
 import type { Keyword } from "@/lib/types";
 import type { Paper } from "@/lib/semanticScholar";
@@ -30,17 +29,16 @@ export function DiscoverContent({ sources }: Props) {
     setVideos(await fetchVideos(query));
   }
 
-  async function searchTerm(term: string) {
+  function searchTerm(term: string) {
     setKeyword(null);
     setContent(null);
     setPapers(null);
     setVideos(null);
     setSelectedVideoUrl(null);
-    const raw = await fetchKeywordByTitle(term);
     const kw: Keyword = {
-      title: raw.title,
-      extract: raw.extract,
-      pageUrl: raw.content_urls.desktop.page,
+      title: term,
+      extract: "",
+      pageUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(term)}`,
     };
     setKeyword(kw);
     loadContent(kw).catch(console.error);
