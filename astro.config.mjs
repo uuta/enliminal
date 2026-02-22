@@ -7,4 +7,5 @@ export default defineConfig({
   output: "server",
   adapter: vercel(),
   server: { port: 4421 },
+  devToolbar: { enabled: false },
 });
