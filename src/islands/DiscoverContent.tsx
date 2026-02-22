@@ -1,11 +1,6 @@
 import { useState, useRef } from "react";
 import { MermaidDiagram } from "@/islands/MermaidDiagram";
-import {
-  KeywordSkeleton,
-  ContentSkeleton,
-  PapersSkeleton,
-  VideosSkeleton,
-} from "@/islands/DiscoverSkeleton";
+import { ContentSkeleton, PapersSkeleton, VideosSkeleton } from "@/islands/DiscoverSkeleton";
 import type { KeywordData } from "@/lib/generateContent";
 import { fetchKeywordByTitle } from "@/lib/wikipedia";
 import { fetchRandomKeyword, generateContent, fetchPapers, fetchVideos } from "@/lib/client";
@@ -66,18 +61,33 @@ export function DiscoverContent({ sources }: Props) {
     runDiscovery().catch(console.error);
   }
 
-  if (!keyword) {
-    return <KeywordSkeleton />;
-  }
-
   return (
     <div className="reveal visible" data-testid="reveal-container">
       <div className="reveal-inner">
-        {content && <div className="reveal-category">{content.category}</div>}
-        <div className="reveal-keyword" data-testid="reveal-keyword">
-          {keyword.title}
-        </div>
-        <div className="reveal-accent" />
+        {keyword ? (
+          <>
+            {content && <div className="reveal-category">{content.category}</div>}
+            <div className="reveal-keyword" data-testid="reveal-keyword">
+              {keyword.title}
+            </div>
+            <div className="reveal-accent" />
+          </>
+        ) : (
+          <>
+            <span
+              className="skel skel-line"
+              style={{ width: "6rem", height: "0.75rem", marginBottom: "0.5rem" }}
+            />
+            <div
+              className="skel skel-block"
+              style={{ height: "clamp(3rem, 8vw, 6rem)", marginBottom: "1.5rem" }}
+            />
+            <div
+              className="skel skel-block"
+              style={{ height: "2px", marginBottom: "2rem", opacity: 0.4 }}
+            />
+          </>
+        )}
 
         {content ? (
           <>
