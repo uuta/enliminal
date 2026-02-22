@@ -3,6 +3,7 @@ import { MermaidDiagram } from "@/islands/MermaidDiagram";
 import { KeywordSkeleton, ContentSkeleton, PapersSkeleton, VideosSkeleton } from '@/islands/DiscoverSkeleton';
 import type { KeywordData } from "@/lib/generateContent";
 import { fetchKeywordByTitle } from "@/lib/wikipedia";
+import { fetchRandomKeyword, generateContent, fetchPapers, fetchVideos } from "@/lib/client";
 import type { Keyword } from "@/lib/types";
 import type { Paper } from "@/lib/semanticScholar";
 import type { Video } from "@/lib/youtube";
@@ -17,26 +18,16 @@ export function DiscoverContent({ sources }: Props) {
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
   const started = useRef(false);
 
-  async function fetchContent(kw: Keyword) {
-    const res = await fetch('/api/gemini/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ keyword: kw.title, extract: kw.extract, pageUrl: kw.pageUrl }),
-    });
-    const parsed = await res.json();
-    setContent({ title: kw.title, pageUrl: kw.pageUrl, ...parsed });
+  async function loadContent(kw: Keyword) {
+    setContent(await generateContent(kw));
   }
 
-  async function fetchPapers(query: string) {
-    const res = await fetch(`/api/papers?query=${encodeURIComponent(query)}`);
-    const data: Paper[] = await res.json();
-    setPapers(data);
+  async function loadPapers(query: string) {
+    setPapers(await fetchPapers(query));
   }
 
-  async function fetchVideos(query: string) {
-    const res = await fetch(`/api/videos?query=${encodeURIComponent(query)}`);
-    const data: Video[] = await res.json();
-    setVideos(data);
+  async function loadVideos(query: string) {
+    setVideos(await fetchVideos(query));
   }
 
   async function searchTerm(term: string) {
@@ -47,23 +38,22 @@ export function DiscoverContent({ sources }: Props) {
     setSelectedVideoUrl(null);
     const kw = await fetchKeywordByTitle(term);
     setKeyword(kw);
-    fetchContent(kw);
-    fetchPapers(kw.title);
-    fetchVideos(kw.title);
+    loadContent(kw).catch(console.error);
+    loadPapers(kw.title).catch(console.error);
+    loadVideos(kw.title).catch(console.error);
   }
 
   async function runDiscovery() {
-    const res = await fetch(`/api/keyword/random?sources=${encodeURIComponent(sources)}`);
-    const kw: Keyword = await res.json();
+    const kw = await fetchRandomKeyword(sources);
     setKeyword(kw);
-    fetchContent(kw);
-    fetchPapers(kw.title);
-    fetchVideos(kw.title);
+    loadContent(kw).catch(console.error);
+    loadPapers(kw.title).catch(console.error);
+    loadVideos(kw.title).catch(console.error);
   }
 
   if (!started.current && typeof window !== 'undefined') {
     started.current = true;
-    runDiscovery();
+    runDiscovery().catch(console.error);
   }
 
   if (!keyword) {
