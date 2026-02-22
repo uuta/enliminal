@@ -1,19 +1,27 @@
 import mermaid from "mermaid";
+import { colors } from "@/styles/tokens";
+
+function hexToRgb(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `${r}, ${g}, ${b}`;
+}
 
 mermaid.initialize({
   startOnLoad: false,
-  theme: "dark",
+  theme: "base",
   themeVariables: {
-    primaryColor: "#c9a84c",
-    primaryTextColor: "#e8e8e8",
-    primaryBorderColor: "rgba(201,168,76,0.3)",
-    lineColor: "rgba(201,168,76,0.5)",
-    background: "rgba(20,20,26,0)",
-    mainBkg: "rgba(20,20,26,0.6)",
-    nodeBorder: "rgba(201,168,76,0.4)",
-    clusterBkg: "rgba(20,20,26,0.4)",
-    titleColor: "#c9a84c",
-    edgeLabelBackground: "rgba(20,20,26,0.8)",
+    primaryColor:        colors.accentGold,
+    primaryTextColor:    colors.textPrimary,
+    primaryBorderColor:  `rgba(${hexToRgb(colors.accentGold)}, 0.3)`,
+    lineColor:           `rgba(${hexToRgb(colors.accentGold)}, 0.5)`,
+    background:          "rgba(20,20,26,0)",
+    mainBkg:             `rgba(${hexToRgb(colors.bgSurface)}, 0.6)`,
+    nodeBorder:          `rgba(${hexToRgb(colors.accentGold)}, 0.4)`,
+    clusterBkg:          `rgba(${hexToRgb(colors.bgSurface)}, 0.4)`,
+    titleColor:          colors.accentGold,
+    edgeLabelBackground: `rgba(${hexToRgb(colors.bgSurface)}, 0.8)`,
   },
 });
 

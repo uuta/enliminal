@@ -185,7 +185,7 @@ Neon Postgresでデータベースを作成し、上記スキーマを実行：
 bun run dev
 ```
 
-http://localhost:4321 でアプリケーションが起動します。
+http://localhost:4421 でアプリケーションが起動します。
 
 ## デプロイ手順
 

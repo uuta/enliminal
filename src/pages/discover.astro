@@ -2,9 +2,20 @@
 import Layout from '@/layouts/Layout.astro';
 import { DiscoverContent } from '@/islands/DiscoverContent';
 import { fetchRandomKeyword } from '@/lib/wikipedia';
+import { fetchRandomHNKeyword } from '@/lib/hackernews';
 import { generateKeywordContent } from '@/lib/generateContent';
 
-const wiki = await fetchRandomKeyword();
+const rawSources = Astro.url.searchParams.get('sources') ?? 'wikipedia';
+const selected = rawSources.split(',').filter(
+  (s): s is 'wikipedia' | 'hackernews' => s === 'wikipedia' || s === 'hackernews'
+);
+const sources = selected.length > 0 ? selected : ['wikipedia' as const];
+const pick = sources[Math.floor(Math.random() * sources.length)];
+
+const wiki = pick === 'hackernews'
+  ? await fetchRandomHNKeyword()
+  : await fetchRandomKeyword();
+
 const kwData = await generateKeywordContent(wiki.title, wiki.extract, wiki.pageUrl);
 ---
 

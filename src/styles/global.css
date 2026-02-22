@@ -8,16 +8,19 @@
   box-sizing: border-box;
 }
 
+/* ⚠ These values must stay in sync with src/styles/tokens.ts */
 :root {
-  --bg-void: #08080a;
-  --bg-deep: #0d0d11;
-  --bg-surface: #14141a;
-  --accent-gold: #c9a84c;
+  --bg-void:            #08080a;
+  --bg-deep:            #0d0d11;
+  --bg-surface:         #14141a;
+  --bg-surface-rgb:     20, 20, 26;   /* for rgba() usage */
+  --accent-gold:        #c9a84c;
+  --accent-gold-rgb:    201, 168, 76; /* for rgba() usage */
   --accent-gold-bright: #e6c55a;
-  --accent-gold-dim: #8a7235;
-  --text-primary: #f0ece4;
-  --text-secondary: #9e9a92;
-  --text-dim: #5a5750;
+  --accent-gold-dim:    #8a7235;
+  --text-primary:       #f0ece4;
+  --text-secondary:     #9e9a92;
+  --text-dim:           #5a5750;
 }
 
 html,
@@ -152,6 +155,54 @@ body {
   animation: fade-up 1s 0.7s ease forwards;
 }
 
+/* ---- Source selector ---- */
+.source-selector {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  opacity: 0;
+  animation: fade-up 1s 0.9s ease forwards;
+}
+
+.source-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.source-option input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--accent-gold-dim);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.source-option input[type="checkbox"]:checked {
+  background: var(--accent-gold-dim);
+  border-color: var(--accent-gold);
+}
+
+.source-option-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  transition: color 0.2s ease;
+  user-select: none;
+}
+
+.source-option:has(input:checked) .source-option-label {
+  color: var(--accent-gold-dim);
+}
+
 /* ---- The Button ---- */
 .discover-btn {
   position: relative;
@@ -184,7 +235,7 @@ body {
 .discover-btn:not(:disabled):hover .btn-ring {
   border-color: var(--accent-gold);
   transform: scale(1.06);
-  box-shadow: 0 0 60px rgba(201, 168, 76, 0.1), inset 0 0 30px rgba(201, 168, 76, 0.03);
+  box-shadow: 0 0 60px rgba(var(--accent-gold-rgb), 0.1), inset 0 0 30px rgba(var(--accent-gold-rgb), 0.03);
 }
 
 .discover-btn:not(:disabled):active .btn-ring {
@@ -205,9 +256,9 @@ body {
 .discover-btn:not(:disabled):hover .btn-label {
   color: var(--accent-gold-bright);
   text-shadow:
-    0 0 10px rgba(201, 168, 76, 0.8),
-    0 0 20px rgba(201, 168, 76, 0.6),
-    0 0 30px rgba(201, 168, 76, 0.4);
+    0 0 10px rgba(var(--accent-gold-rgb), 0.8),
+    0 0 20px rgba(var(--accent-gold-rgb), 0.6),
+    0 0 30px rgba(var(--accent-gold-rgb), 0.4);
   animation: glitch-shift 0.3s ease-in-out;
 }
 
@@ -282,7 +333,7 @@ body {
   width: 300px;
   height: 300px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(201, 168, 76, 0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--accent-gold-rgb), 0.06) 0%, transparent 70%);
   animation: breathe 4s ease-in-out infinite;
   pointer-events: none;
 }
@@ -443,8 +494,8 @@ body {
 
 /* -- Diagram section -- */
 .diagram-section .diagram-container {
-  background: rgba(20, 20, 26, 0.8);
-  border: 1px solid rgba(201, 168, 76, 0.12);
+  background: rgba(var(--bg-surface-rgb), 0.8);
+  border: 1px solid rgba(var(--accent-gold-rgb), 0.12);
   border-radius: 4px;
   padding: 1.5rem;
   overflow-x: auto;
@@ -502,8 +553,8 @@ body {
   font-size: 0.72rem;
   letter-spacing: 0.05em;
   color: var(--accent-gold);
-  border: 1px solid rgba(201, 168, 76, 0.25);
-  background: rgba(201, 168, 76, 0.04);
+  border: 1px solid rgba(var(--accent-gold-rgb), 0.25);
+  background: rgba(var(--accent-gold-rgb), 0.04);
   padding: 0.4em 0.9em;
   border-radius: 2px;
   transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
@@ -511,14 +562,14 @@ body {
 }
 
 .related-terms-section .term-tag:hover {
-  background: rgba(201, 168, 76, 0.1);
+  background: rgba(var(--accent-gold-rgb), 0.1);
   border-color: var(--accent-gold);
   transform: scale(1.05);
 }
 
 .related-terms-section .term-tag:active {
   transform: scale(0.98);
-  background: rgba(201, 168, 76, 0.15);
+  background: rgba(var(--accent-gold-rgb), 0.15);
 }
 
 .cursor {
@@ -587,7 +638,7 @@ body {
 .reset-btn:hover {
   border-color: var(--accent-gold);
   color: var(--accent-gold);
-  background: rgba(201, 168, 76, 0.05);
+  background: rgba(var(--accent-gold-rgb), 0.05);
 }
 
 /* ============================================
@@ -618,6 +669,6 @@ body {
     animation: none;
   }
   .discover-btn:not(:disabled):hover .btn-label {
-    text-shadow: 0 0 10px rgba(201, 168, 76, 0.6);
+    text-shadow: 0 0 10px rgba(var(--accent-gold-rgb), 0.6);
   }
 }
