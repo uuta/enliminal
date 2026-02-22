@@ -4,6 +4,11 @@ const HN_TOP = "https://hacker-news.firebaseio.com/v0/topstories.json";
 const HN_ITEM = (id: number) =>
   `https://hacker-news.firebaseio.com/v0/item/${id}.json`;
 
+interface Response {
+  title: string;
+  text?: string;
+}
+
 export async function fetchRandomHNKeyword(): Promise<WikiKeyword> {
   const res = await fetch(HN_TOP);
   if (!res.ok) throw new Error(`HN API error: ${res.status}`);
@@ -11,7 +16,7 @@ export async function fetchRandomHNKeyword(): Promise<WikiKeyword> {
   const id = ids[Math.floor(Math.random() * Math.min(100, ids.length))];
   const itemRes = await fetch(HN_ITEM(id));
   if (!itemRes.ok) throw new Error(`HN item error: ${itemRes.status}`);
-  const item = await itemRes.json();
+  const item: Response = await itemRes.json();
   return {
     title: item.title,
     extract: item.text ?? "",
