@@ -64,29 +64,40 @@ export function DiscoverContent({ sources }: Props) {
       <div className="reveal-inner">
         {keyword ? (
           <>
-            {content && <div className="reveal-category">{content.category}</div>}
-            <div className="reveal-keyword" data-testid="reveal-keyword">
-              {keyword.title}
-            </div>
-            {!content && (
-              <span
+            {content ? (
+              <div className="reveal-category">{content.category}</div>
+            ) : (
+              <div
                 className="skel skel-line"
                 style={{
                   width: "8rem",
                   height: "1rem",
-                  marginTop: "0.6rem",
-                  marginBottom: "0.5rem",
+                  marginBottom: "1.5rem",
                 }}
               />
             )}
-            {content?.japaneseTitle && (
-              <div className="reveal-keyword-ja">({content.japaneseTitle})</div>
+            <div className="reveal-keyword" data-testid="reveal-keyword">
+              {keyword.title}
+            </div>
+            {content ? (
+              content.japaneseTitle && (
+                <div className="reveal-keyword-ja">({content.japaneseTitle})</div>
+              )
+            ) : (
+              <div
+                className="skel skel-line"
+                style={{
+                  width: "6rem",
+                  height: "1rem",
+                  marginTop: "0.6rem",
+                }}
+              />
             )}
             <div className="reveal-accent" />
           </>
         ) : (
           <>
-            <span
+            <div
               className="skel skel-line"
               style={{ width: "6rem", height: "0.75rem", marginBottom: "0.5rem" }}
             />

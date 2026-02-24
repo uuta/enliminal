@@ -4,15 +4,15 @@ export function ContentSkeleton() {
       <div className="content-section definition-section visible">
         <div className="section-label">Definition</div>
         <div className="skeleton-rows">
-          <span className="skel skel-line" style={{ height: "1.2rem" }} />
-          <span className="skel skel-line" style={{ width: "85%", height: "1.2rem" }} />
+          <div className="skel skel-line" style={{ height: "1.2rem" }} />
+          <div className="skel skel-line" style={{ width: "85%", height: "1.2rem" }} />
         </div>
       </div>
       <div className="content-section explanation-section visible">
         <div className="section-label">Explanation</div>
         <div className="skeleton-rows">
           {[100, 92, 97, 78, 88].map((w, i) => (
-            <span key={i} className="skel skel-line" style={{ width: `${w}%`, height: "0.9rem" }} />
+            <div key={i} className="skel skel-line" style={{ width: `${w}%`, height: "0.9rem" }} />
           ))}
         </div>
       </div>
@@ -20,11 +20,7 @@ export function ContentSkeleton() {
         <div className="section-label">Use Cases</div>
         <div className="skeleton-rows">
           {[72, 65, 80, 60, 75].map((w, i) => (
-            <span
-              key={i}
-              className="skel skel-line"
-              style={{ width: `${w}%`, height: "0.85rem" }}
-            />
+            <div key={i} className="skel skel-line" style={{ width: `${w}%`, height: "0.85rem" }} />
           ))}
         </div>
       </div>
@@ -51,7 +47,7 @@ export function PapersSkeleton() {
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {[100, 88, 95, 80].map((w, i) => (
           <div key={i} style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <span className="skel skel-line" style={{ width: `${w}%`, height: "0.9rem" }} />
+            <div className="skel skel-line" style={{ width: `${w}%`, height: "0.9rem" }} />
             <span className="skel skel-line" style={{ width: "45%", height: "0.65rem" }} />
           </div>
         ))}
@@ -67,14 +63,14 @@ export function VideosSkeleton() {
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {[0, 1, 2, 3].map((i) => (
           <div key={i} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
-            <span
+            <div
               className="skel"
               style={{ width: "120px", height: "68px", flexShrink: 0, borderRadius: "4px" }}
             />
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-              <span className="skel skel-line" style={{ height: "0.85rem" }} />
-              <span className="skel skel-line" style={{ width: "60%", height: "0.85rem" }} />
-              <span className="skel skel-line" style={{ width: "40%", height: "0.65rem" }} />
+              <div className="skel skel-line" style={{ height: "0.85rem" }} />
+              <div className="skel skel-line" style={{ width: "60%", height: "0.85rem" }} />
+              <div className="skel skel-line" style={{ width: "40%", height: "0.65rem" }} />
             </div>
           </div>
         ))}
