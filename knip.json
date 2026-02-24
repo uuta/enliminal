@@ -1,0 +1,15 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": [
+    "src/pages/**/*.{astro,ts,tsx}",
+    "src/islands/**/*.{ts,tsx}",
+    "src/lib/__tests__/*.latency.ts"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx,astro}"
+  ],
+  "ignoreDependencies": [
+    "@supabase/supabase-js",
+    "stripe"
+  ]
+}

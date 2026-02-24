@@ -1,5 +1,4 @@
 import { SUPPORTED_LANGS } from "@/lib/lang";
-export type { Language } from "@/lib/lang";
 
 interface Response {
   type: string;
@@ -25,14 +24,6 @@ interface Response {
 export async function fetchRandomKeyword(): Promise<Response> {
   const lang = SUPPORTED_LANGS[Math.floor(Math.random() * SUPPORTED_LANGS.length)];
   const res = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/random/summary`);
-  if (!res.ok) throw new Error(`Wikipedia API error: ${res.status}`);
-  return res.json();
-}
-
-export async function fetchKeywordByTitle(title: string): Promise<Response> {
-  const res = await fetch(
-    `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`,
-  );
   if (!res.ok) throw new Error(`Wikipedia API error: ${res.status}`);
   return res.json();
 }

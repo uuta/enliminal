@@ -2,7 +2,7 @@ interface Response {
   data: City[];
 }
 
-export interface City {
+interface City {
   id: number;
   wikiDataId?: string;
   city: string;

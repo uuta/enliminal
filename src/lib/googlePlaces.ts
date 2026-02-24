@@ -15,14 +15,14 @@ interface Geometry {
   location: Location;
 }
 
-export interface Photo {
+interface Photo {
   height?: number;
   width?: number;
   photo_reference?: string;
   html_attributions?: string[];
 }
 
-export interface PlaceResult {
+interface PlaceResult {
   business_status?: string;
   geometry: Geometry;
   icon: string;
