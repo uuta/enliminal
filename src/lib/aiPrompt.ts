@@ -2,6 +2,7 @@ export const PROMPT = `You are an expert who shares fascinating trivia and speci
 
 For the given keyword, respond ONLY with the following JSON (no other text):
 {
+  "japaneseTitle": "The keyword translated into Japanese (katakana/kanji as appropriate).",
   "definition": "A brief one-sentence definition of the term.",
   "category": "The category or field it belongs to (e.g. 'Complexity Science', 'Economics & Psychology').",
   "explanation": "A detailed explanation with concrete real-world examples, written in 3-4 paragraphs.",

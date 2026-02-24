@@ -137,7 +137,7 @@ body {
 
 .stage-subtitle {
   font-family: "DM Mono", monospace;
-  font-size: 1rem;
+  font-size: 1.4rem;
   letter-spacing: 0.35em;
   text-transform: uppercase;
   color: var(--accent-gold-dim);
@@ -452,7 +452,7 @@ body {
 .reveal-keyword {
   font-family: "Playfair Display", serif;
   font-weight: 900;
-  font-size: clamp(2.4rem, 9vw, 4rem);
+  font-size: clamp(2.4rem, 9vw, 2.5rem);
   line-height: 1.05;
   text-align: center;
   color: var(--text-primary);
@@ -470,11 +470,12 @@ body {
 }
 
 .reveal-keyword-ja {
-  font-size: 0.45em;
+  font-family: "Noto Sans JP", sans-serif;
+  font-size: clamp(0.85rem, 2.5vw, 1.1rem);
   font-weight: 400;
-  color: var(--text-secondary, #888);
-  margin-left: 0.5em;
-  white-space: nowrap;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 0.6rem;
 }
 
 .reveal-accent {

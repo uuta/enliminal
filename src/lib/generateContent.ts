@@ -4,6 +4,7 @@ import { PROMPT } from "@/lib/aiPrompt";
 export interface KeywordData {
   title: string;
   pageUrl: string;
+  japaneseTitle: string;
   category: string;
   definition: string;
   explanation: string;
@@ -41,6 +42,7 @@ export async function generateKeywordContent(
     return {
       title: keyword,
       pageUrl,
+      japaneseTitle: "",
       category: "",
       definition: rawJson.slice(0, 100),
       explanation: rawJson,
