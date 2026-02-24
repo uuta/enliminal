@@ -28,7 +28,7 @@ export function StageButton() {
   return (
     <div className="stage">
       <div className="stage-subtitle">Enliminal</div>
-      <div className="stage-title">行ってみよう。飛んでみよう</div>
+      <div className="stage-title">知らない世界へ、もう一歩。</div>
       <div className="stage-tagline">An encounter with the unknown</div>
       <div className="source-selector">
         {(["wikipedia", "hackernews"] as Source[]).map((src) => (

@@ -199,10 +199,12 @@ export function DiscoverContent({ sources }: Props) {
         {/* CTA — shown once AI content is ready */}
         {content && (
           <div className="reveal-cta visible">
-            <div className="cta-message">行ってみよう。飛んでみよう</div>
+            <div className="cta-message">知らない世界へ、もう一歩。</div>
             <div className="cta-sub">Let curiosity lead you forward</div>
             <a href={`/discover?sources=${sources}`} className="reset-btn">
-              もう一回
+              <span className="reset-btn-label" data-text="もう一回">
+                もう一回
+              </span>
             </a>
           </div>
         )}
