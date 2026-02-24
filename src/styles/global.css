@@ -452,7 +452,7 @@ body {
 .reveal-keyword {
   font-family: "Playfair Display", serif;
   font-weight: 900;
-  font-size: clamp(2.4rem, 9vw, 5.5rem);
+  font-size: clamp(2.4rem, 9vw, 4rem);
   line-height: 1.05;
   text-align: center;
   color: var(--text-primary);
