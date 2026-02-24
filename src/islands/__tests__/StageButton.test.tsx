@@ -13,6 +13,6 @@ describe("StageButton", () => {
   it("ステージテキストが表示される", () => {
     render(<StageButton />);
     expect(screen.getByText("Enliminal")).toBeInTheDocument();
-    expect(screen.getByText("知識の世界へ、もう一歩。")).toBeInTheDocument();
+    expect(screen.getByText("知らない世界へ、もう一歩。")).toBeInTheDocument();
   });
 });
