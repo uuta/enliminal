@@ -1,4 +1,4 @@
-import type { Language } from "@/lib/wikipedia";
+import type { Language } from "@/lib/lang";
 
 interface Response {
   results: PlaceResult[];

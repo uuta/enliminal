@@ -1,3 +1,6 @@
+import { SUPPORTED_LANGS } from "@/lib/lang";
+export type { Language } from "@/lib/lang";
+
 interface Response {
   type: string;
   title: string;
@@ -19,24 +22,8 @@ interface Response {
   originalimage?: { source: string; width: number; height: number };
 }
 
-export const WIKI_LANGS = [
-  "en",
-  "ja",
-  "de",
-  "fr",
-  "es",
-  "zh",
-  "ru",
-  "pt",
-  "ar",
-  "ko",
-  "it",
-  "nl",
-] as const;
-export type Language = (typeof WIKI_LANGS)[number];
-
 export async function fetchRandomKeyword(): Promise<Response> {
-  const lang = WIKI_LANGS[Math.floor(Math.random() * WIKI_LANGS.length)];
+  const lang = SUPPORTED_LANGS[Math.floor(Math.random() * SUPPORTED_LANGS.length)];
   const res = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/random/summary`);
   if (!res.ok) throw new Error(`Wikipedia API error: ${res.status}`);
   return res.json();
