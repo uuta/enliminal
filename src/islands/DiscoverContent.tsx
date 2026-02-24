@@ -68,6 +68,17 @@ export function DiscoverContent({ sources }: Props) {
             <div className="reveal-keyword" data-testid="reveal-keyword">
               {keyword.title}
             </div>
+            {!content && (
+              <span
+                className="skel skel-line"
+                style={{
+                  width: "8rem",
+                  height: "1rem",
+                  marginTop: "0.6rem",
+                  marginBottom: "0.5rem",
+                }}
+              />
+            )}
             {content?.japaneseTitle && (
               <div className="reveal-keyword-ja">({content.japaneseTitle})</div>
             )}

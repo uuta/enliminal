@@ -1,24 +1,3 @@
-export function KeywordSkeleton() {
-  return (
-    <div className="reveal visible" data-testid="reveal-container">
-      <div className="reveal-inner">
-        <span
-          className="skel skel-line"
-          style={{ width: "6rem", height: "0.75rem", marginBottom: "0.5rem" }}
-        />
-        <div
-          className="skel skel-block"
-          style={{ height: "clamp(3rem, 8vw, 6rem)", marginBottom: "1.5rem" }}
-        />
-        <div
-          className="skel skel-block"
-          style={{ height: "2px", marginBottom: "2rem", opacity: 0.4 }}
-        />
-      </div>
-    </div>
-  );
-}
-
 export function ContentSkeleton() {
   return (
     <>
