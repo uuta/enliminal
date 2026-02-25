@@ -102,8 +102,12 @@ export function DiscoverContent({ sources }: Props) {
               style={{ width: "6rem", height: "0.75rem", marginBottom: "0.5rem" }}
             />
             <div
-              className="skel skel-block"
-              style={{ height: "clamp(3rem, 8vw, 6rem)", marginBottom: "1.5rem" }}
+              className="skel skel-line"
+              style={{ width: "60%", height: "clamp(2.4rem, 9vw, 2.5rem)", marginBottom: "0.8rem" }}
+            />
+            <div
+              className="skel skel-line"
+              style={{ width: "6rem", height: "1rem", marginTop: "0.6rem", marginBottom: "1.5rem" }}
             />
             <div
               className="skel skel-block"
